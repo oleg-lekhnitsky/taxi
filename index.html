@@ -351,6 +351,33 @@ border: 1px solid;
         outline: none;
       }
 
+      #logo2PlaceholderText {
+        transform-box: fill-box;
+        transform-origin: center;
+        transition:
+          opacity 160ms ease,
+          transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      #logo2PlaceholderText.is-plus {
+        animation: logo-plus-pop 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      @keyframes logo-plus-pop {
+        0% {
+          opacity: 0;
+          transform: scale(0.72) rotate(-18deg);
+        }
+        60% {
+          opacity: 1;
+          transform: scale(1.08) rotate(4deg);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+      }
+
       #logoPanel {
         overflow: hidden;
       }
@@ -919,13 +946,34 @@ border: 1px solid;
           placeholder.textContent = "+";
           placeholder.setAttribute("font-size", "68");
           placeholder.setAttribute("y", "69");
+          placeholder.style.opacity = "";
+          placeholder.style.transform = "";
+          placeholder.classList.remove("is-plus");
+          void placeholder.getBoundingClientRect();
+          placeholder.classList.add("is-plus");
         };
         const restoreText = () => {
+          placeholder.classList.remove("is-plus");
+          placeholder.style.opacity = "0.72";
+          placeholder.style.transform = "scale(0.92)";
           placeholder.textContent =
             placeholder.dataset.placeholderText || placeholder.textContent;
           placeholder.setAttribute("font-size", "12");
           placeholder.setAttribute("y", "56");
+          window.setTimeout(() => {
+            if (placeholder.textContent !== "+") {
+              placeholder.style.opacity = "";
+              placeholder.style.transform = "";
+            }
+          }, 180);
         };
+
+        placeholder.style.opacity = "0.72";
+        placeholder.style.transform = "scale(0.92)";
+        window.requestAnimationFrame(() => {
+          placeholder.style.opacity = "";
+          placeholder.style.transform = "";
+        });
 
         slot.addEventListener("pointerenter", showPlus);
         slot.addEventListener("pointerdown", showPlus);
