@@ -1,0 +1,2121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Генератор графика работы таксопарка для печати."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WB Taxi — График работы таксопарка" />
+    <meta
+      property="og:description"
+      content="Генератор графика работы таксопарка для печати."
+    />
+    <!-- <meta property="og:image" content="og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WB Taxi — График работы таксопарка /> -->
+    <meta
+      name="twitter:description"
+      content="Генератор графика работы таксопарка для печати."
+    />
+    <meta name="twitter:image" content="og-image.svg" />
+    <title>WB Taxi — График работы таксопарка</title>
+    <link
+      id="favicon"
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3CclipPath id='a'%3E%3Crect width='64' height='64' rx='14'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Crect width='64' height='64' fill='%23ff00ff'/%3E%3Cpath fill='rgb(102, 74, 255)' d='M32 0h32v32H32zM0 32h32v32H0z'/%3E%3C/g%3E%3C/svg%3E"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+
+      @font-face {
+        font-family: "WBSans";
+        src: url("WBSans-Medium.otf") format("opentype");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f0f0f0;
+        color: #000000;
+        font-family: "WBSans", Helvetica, Arial, sans-serif;
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        font-weight: 500;
+      }
+
+      .controls {
+        padding: 24px;
+        background: #ffffff;
+        font-family: "InterVariable", "Inter", Helvetica, Arial, sans-serif;
+        margin: 12px;
+        margin-right: 0px;
+        border-radius: 24px;
+        height: fit-content;
+      }
+
+      .controls h1 {
+        margin: 0 0 8px;
+        font-size: 32px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        font-family: "WBSans", Helvetica, Arial, sans-serif;
+      }
+
+      .controls p {
+        margin: 0 0 28px;
+        color: #71717a;
+        line-height: 1.5;
+        font-size: 14px;
+      }
+
+      .field {
+        margin-bottom: 20px;
+      }
+
+      .fallback-font-field {
+        display: none;
+      }
+
+      .hours-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .hours-separator {
+        color: #71717a;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .preset-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+
+      }
+
+      .preset-chip {
+border: 1px solid; 
+        border-radius: 999px;
+        background: #ffffff;
+        color: #18181b;
+        padding: 6px 10px;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 16px;
+        cursor: pointer;
+      }
+
+      .preset-chip:hover {
+border: 1px solid;
+        background: rgba(0, 0, 0, 0.616);
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        line-height: 1.2;
+        margin-bottom: 8px;
+        color: #18181b;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #000000;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 20px;
+        font-family: inherit;
+        outline: none;
+
+        transition:
+          border-color 140ms ease,
+          box-shadow 140ms ease,
+          background 140ms ease;
+      }
+
+      .hours-input {
+        text-align: center;
+        text-align-last: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      select {
+        appearance: none;
+        background-image:
+          linear-gradient(45deg, transparent 50%, #71717a 50%),
+          linear-gradient(135deg, #71717a 50%, transparent 50%);
+        background-position:
+          calc(100% - 16px) 50%,
+          calc(100% - 11px) 50%;
+        background-size:
+          5px 5px,
+          5px 5px;
+        background-repeat: no-repeat;
+        padding-right: 36px;
+        cursor: pointer;
+      }
+
+      input:hover,
+      select:hover,
+      textarea:hover {
+        border-color: #d4d4d8;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #661aff;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: #a1a1aa;
+      }
+
+      textarea {
+        min-height: 112px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      input[type="file"].native-file-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        clip-path: inset(50%);
+      }
+
+      .file-upload {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #71717a;
+        padding: 6px 6px 6px 12px;
+        font-size: 14px;
+        line-height: 20px;
+        cursor: pointer;
+        transition:
+          border-color 140ms ease,
+          box-shadow 140ms ease,
+          background 140ms ease;
+      }
+
+      .file-upload:hover {
+        border-color: #d4d4d8;
+      }
+
+      .native-file-input:focus-visible + .file-upload {
+        border-color: #661aff;
+
+      }
+
+      .file-upload-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .file-upload-action {
+        flex: 0 0 auto;
+        border-radius: 8px;
+        background: #f4f4f5;
+        color: #18181b;
+        padding: 7px 10px;
+        font-size: 13px;
+        line-height: 18px;
+      }
+
+      button {
+        width: 100%;
+        border: none;
+        border-radius: 24px;
+        padding: 24px;
+        background: #18181b;
+        color: #fff;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        margin-top: 4px;
+        font-family: inherit;
+        font-weight: 500;
+        transition: all 400ms ease;
+      }
+
+      button:hover {
+        transition: all 0.05ms;
+        background: #661aff;
+        border: none;
+      }
+
+      button:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.14);
+      }
+
+      .preset-chip {
+        width: auto;
+            border: 1px solid #e4e4e7;
+        border-radius: 999px;
+        background: #f4f4f4;
+        color: #18181b;
+        margin-top: 0;
+        padding: 6px 10px;
+        font-size: 12px;
+        line-height: 16px;
+        box-shadow: none;
+      }
+
+      .preset-chip:hover {
+        border-color: black;
+        background: rgba(0, 0, 0, 0.837);
+        color: #ffffff;
+      }
+
+      .stage {
+        display: grid;
+        place-items: center;
+        padding: 40px;
+        background-color: white;
+        margin: 12px;
+        border-radius: 24px;
+      }
+
+      .sheet-wrap {
+        width: 420px;
+        height: 540px;
+        border-radius: 100px;
+        box-shadow: 0 40px 160px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      #templateSvg {
+        width: 420px;
+        height: 540px;
+        display: block;
+        background: #e61a33;
+        border-radius: 100px;
+        overflow: hidden;
+      }
+
+      #logo2Slot {
+        cursor: pointer;
+        outline: none;
+      }
+
+      #logo2Slot:focus,
+      #logo2Slot:focus-visible {
+        outline: none;
+      }
+
+      #logoPanel {
+        overflow: hidden;
+      }
+
+      .note {
+        margin-top: 18px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #666;
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside class="controls">
+      <h1 data-i18n="title">График работы таксопарка</h1>
+      <p data-i18n="intro">
+        Введите свои данные и скачайте готовый файл для печати
+      </p>
+
+      <div class="field fallback-font-field">
+        <label for="fontUpload">Font for outline export</label>
+        <input
+          type="file"
+          id="fontUpload"
+          accept=".otf,.ttf,font/otf,font/ttf"
+        />
+      </div>
+
+      <div class="field">
+        <label for="languageInput" data-i18n="languageLabel">Язык</label>
+        <select id="languageInput">
+          <option value="ru" selected>🇷🇺 Русский</option>
+          <option value="uz">🇺🇿 O'zbekcha</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="startHourInput" data-i18n="hoursLabel">Время работы</label>
+        <div class="hours-row">
+          <select
+            class="hours-input"
+            id="startHourInput"
+            data-default-value="08:00"
+            aria-label="Начало работы"
+          ></select>
+          <span class="hours-separator">–</span>
+          <select
+            class="hours-input"
+            id="endHourInput"
+            data-default-value="20:00"
+            aria-label="Конец работы"
+          ></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="subheadingInput" data-i18n="daysLabel">Дни работы</label>
+        <input id="subheadingInput" value="ежедневно" />
+        <div
+          class="preset-chips"
+          id="subheadingPresets"
+          aria-label="Готовые варианты дней работы"
+        ></div>
+      </div>
+
+      <div class="field">
+        <label for="paragraphInput" data-i18n="legalLabel"
+          >Юридическая информация</label
+        >
+        <textarea id="paragraphInput">
++998 78 123-45-67
+ОOО «Такси для души» УНП 123456789</textarea
+        >
+      </div>
+
+      <div class="field">
+        <label id="logo2UploadLabel" for="logo2Upload" data-i18n="logoLabel"
+          >Ваш векторный логотип в формате SVG</label
+        >
+        <input
+          class="native-file-input"
+          type="file"
+          id="logo2Upload"
+          accept=".svg,image/svg+xml"
+          aria-labelledby="logo2UploadLabel"
+        />
+        <label class="file-upload" for="logo2Upload">
+          <span
+            class="file-upload-text"
+            id="logo2UploadText"
+            data-i18n="fileEmpty"
+            >SVG файл не выбран</span
+          >
+          <span class="file-upload-action" data-i18n="fileAction">Выбрать</span>
+        </label>
+      </div>
+
+      <button id="exportBtn" data-i18n="download">Скачать</button>
+
+      <!-- <div class="note">
+      Important: exact CMYK export supports outlined text paths and uploaded SVG paths. Complex SVG effects, gradients,
+      masks, strokes, images, and live text inside uploaded logos are not supported by this minimal exporter.
+    </div> -->
+    </aside>
+
+    <main class="stage">
+      <div class="sheet-wrap" data-color="red">
+        <svg
+          id="templateSvg"
+          viewBox="0 0 420 540"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            x="0"
+            y="0"
+            width="420"
+            height="540"
+            rx="100"
+            ry="100"
+            fill="#e61a33"
+            data-color="red"
+          />
+          <rect
+            x="0"
+            y="0"
+            width="420"
+            height="420"
+            rx="72"
+            ry="72"
+            fill="#ffffff"
+            data-color="white"
+          />
+
+          <g
+            id="logo2Slot"
+            transform="translate(135 42)"
+            data-preserve-colors="true"
+            data-slot-width="150"
+            data-slot-height="105"
+          >
+            <rect
+              x="0"
+              y="0"
+              width="150"
+              height="105"
+              fill="none"
+              pointer-events="all"
+            />
+            <rect
+              x="0"
+              y="0"
+              width="150"
+              height="105"
+              fill="none"
+              stroke="#cccccc"
+              stroke-dasharray="5 4"
+            />
+            <text
+              id="logo2PlaceholderText"
+              data-placeholder-text="Ваш логотип"
+              x="75"
+              y="56"
+              text-anchor="middle"
+              font-size="12"
+              fill="#888888"
+              font-family="Helvetica, Arial, sans-serif"
+            >
+              Ваш логотип
+            </text>
+          </g>
+
+          <text
+            id="headingSvg"
+            data-color="black"
+            x="210"
+            y="218"
+            font-family="WBSans, Helvetica, Arial, sans-serif"
+            font-size="56"
+            font-weight="500"
+            text-anchor="middle"
+            letter-spacing="-1.76"
+            fill="#000000"
+          ></text>
+
+          <text
+            id="subheadingSvg"
+            data-color="black"
+            x="210"
+            y="260"
+            font-family="WBSans, Helvetica, Arial, sans-serif"
+            font-size="32"
+            font-weight="500"
+            text-anchor="middle"
+            fill="#000000"
+          ></text>
+
+          <text
+            id="paragraphSvg"
+            data-color="black"
+            x="210"
+            y="294"
+
+            font-family="InterVariable, sans-serif"
+            font-size="8"
+            font-weight="500"
+            text-anchor="middle"
+            fill="#000000"
+          ></text>
+
+          <g id="logoPanel" transform="translate(0 420)">
+            <path
+              d="M 0 0 H 420 V 76 C 420 100.301 400.301 120 376 120 H 44 C 19.699 120 0 100.301 0 76 V 0 Z"
+              fill="#e61a33"
+              data-color="red"
+            />
+            <g
+              id="logo1Slot"
+              transform="translate(100 24)"
+              data-logo-color="white"
+              data-slot-width="220"
+              data-slot-height="72"
+            >
+              <rect
+                x="0"
+                y="0"
+                width="220"
+                height="72"
+                fill="none"
+                stroke="#ffffff"
+                stroke-opacity="0.4"
+                stroke-dasharray="5 4"
+              />
+              <text
+                x="110"
+                y="40"
+                text-anchor="middle"
+                font-size="14"
+                fill="#ffffff"
+                font-family="Helvetica, Arial, sans-serif"
+              >
+                Logo 1
+              </text>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </main>
+
+    <script>
+      const { jsPDF } = window.jspdf;
+
+      const PAGE_PX = 420;
+      const PAGE_HEIGHT_PX = 540;
+      const PAGE_MM = 148;
+      const PAGE_HEIGHT_MM = PAGE_MM * (PAGE_HEIGHT_PX / PAGE_PX);
+      const SCALE = PAGE_MM / PAGE_PX;
+      const WHITE_RECT_HEIGHT = 420;
+      const WHITE_RECT_BOTTOM_PADDING = 28;
+      const PARAGRAPH_LINE_HEIGHT = 12;
+      const PARAGRAPH_MAX_WIDTH = 280;
+
+      const BRAND_COLORS = {
+        white: { c: 0, m: 0, y: 0, k: 0 },
+        black: { c: 0, m: 0, y: 0, k: 100 },
+        red: { c: 60, m: 71, y: 0, k: 0 },
+      };
+
+      const WBSANS_OUTLINE_FONT_URL = "WBSans-Medium.otf";
+      const INTER_OUTLINE_FONT_URL = "Inter-Medium.ttf";
+
+      const LEGAL_DEFAULTS = {
+        ru: "+998 78 123-45-67\nОOО «Такси для души» УНП 123456789",
+        uz: "+998 78 123-45-67\n«Ko‘ngil taksisi» MChJ STIR 123456789",
+      };
+
+      const I18N = {
+        ru: {
+          documentTitle: "WB Taxi — График работы таксопарка",
+          title: "График работы таксопарка",
+          intro: "Введите свои данные и скачайте готовый файл для печати",
+          languageLabel: "Язык",
+          hoursLabel: "Время работы",
+          daysLabel: "Дни работы",
+          legalLabel: "Юридическая информация, контакты. Оставьте пустым, если не требуется",
+          logoLabel: "Ваш векторный логотип в формате SVG",
+          fileEmpty: "SVG файл не выбран",
+          fileAction: "Выбрать",
+          download: "Скачать",
+          startAria: "Начало работы",
+          endAria: "Конец работы",
+          logoPlaceholder: "Ваш логотип",
+          subheadingOptions: [
+            ["ежедневно", "Ежедневно"],
+            ["пн–пт", "Пн–Пт"],
+            ["пн–сб", "Пн–Сб"],
+            ["по будням", "По будням"],
+            ["без выходных", "Без выходных"],
+          ],
+        },
+        uz: {
+          documentTitle: "WB Taxi — Ish vaqti",
+          title: "Taksopark ish vaqti",
+          intro:
+            "Ma’lumotlarni kiriting va chop etish uchun tayyor faylni yuklab oling",
+          languageLabel: "Til",
+          hoursLabel: "Ish vaqti",
+          daysLabel: "Ish kunlari",
+          legalLabel: "Yuridik ma’lumot",
+          logoLabel: "Qora-oq logotipingiz SVG formatida",
+          fileEmpty: "SVG fayl tanlanmagan",
+          fileAction: "Tanlash",
+          download: "Yuklab olish",
+          startAria: "Ish boshlanish vaqti",
+          endAria: "Ish tugash vaqti",
+          logoPlaceholder: "Logotipingiz",
+          subheadingOptions: [
+            ["har kuni", "Har kuni"],
+            ["du–ju", "Du–Ju"],
+            ["du–sh", "Du–Sh"],
+            ["ish kunlari", "Ish kunlari"],
+            ["dam olishsiz", "Dam olishsiz"],
+          ],
+        },
+      };
+
+      let wbSansOutlineFont = null;
+      let interOutlineFont = null;
+      let outlineFontLoadPromise = null;
+      let currentLanguage = "ru";
+
+      function setCmykFill(doc, colorName) {
+        const color = BRAND_COLORS[colorName] || BRAND_COLORS.black;
+        setCmykFillValue(doc, color);
+      }
+
+      function setCmykFillValue(doc, color) {
+        doc.setFillColor(
+          String(color.c / 100),
+          String(color.m / 100),
+          String(color.y / 100),
+          String(color.k / 100),
+        );
+      }
+
+      function setCmykStrokeValue(doc, color) {
+        doc.setDrawColor(
+          String(color.c / 100),
+          String(color.m / 100),
+          String(color.y / 100),
+          String(color.k / 100),
+        );
+      }
+
+      function rgbToCmyk({ r, g, b }) {
+        const rRatio = r / 255;
+        const gRatio = g / 255;
+        const bRatio = b / 255;
+        const kRatio = 1 - Math.max(rRatio, gRatio, bRatio);
+
+        if (kRatio >= 1) return { c: 0, m: 0, y: 0, k: 100 };
+
+        return {
+          c: ((1 - rRatio - kRatio) / (1 - kRatio)) * 100,
+          m: ((1 - gRatio - kRatio) / (1 - kRatio)) * 100,
+          y: ((1 - bRatio - kRatio) / (1 - kRatio)) * 100,
+          k: kRatio * 100,
+        };
+      }
+
+      function cmykToRgb({ c, m, y, k }) {
+        c /= 100;
+        m /= 100;
+        y /= 100;
+        k /= 100;
+        return {
+          r: Math.round(255 * (1 - c) * (1 - k)),
+          g: Math.round(255 * (1 - m) * (1 - k)),
+          b: Math.round(255 * (1 - y) * (1 - k)),
+        };
+      }
+
+      function rgbHexFromCmyk(cmyk) {
+        const { r, g, b } = cmykToRgb(cmyk);
+        return (
+          "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")
+        );
+      }
+
+      function brandHex(name) {
+        return rgbHexFromCmyk(BRAND_COLORS[name] || BRAND_COLORS.black);
+      }
+
+      function cleanSvgText(svgText) {
+        return svgText
+          .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+          .replace(/\son\w+="[^"]*"/gi, "")
+          .replace(/\son\w+='[^']*'/gi, "");
+      }
+
+      function parseSvg(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, "image/svg+xml");
+        return doc.querySelector("svg");
+      }
+
+      function clearSlot(slot) {
+        while (slot.firstChild) slot.removeChild(slot.firstChild);
+      }
+
+      function populateTimeSelect(select, intervalMinutes = 15) {
+        const defaultValue = select.dataset.defaultValue || select.value;
+
+        select.textContent = "";
+
+        for (let minutes = 0; minutes < 24 * 60; minutes += intervalMinutes) {
+          const hours = String(Math.floor(minutes / 60)).padStart(2, "0");
+          const mins = String(minutes % 60).padStart(2, "0");
+          const value = `${hours}:${mins}`;
+          const option = document.createElement("option");
+
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        }
+
+        select.value = defaultValue;
+      }
+
+      function populateTimeSelects() {
+        ["startHourInput", "endHourInput"].forEach((id) => {
+          populateTimeSelect(document.getElementById(id));
+        });
+      }
+
+      function checkerboardFavicon(rotation) {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><clipPath id="a"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#a)"><g transform="rotate(${rotation} 32 32)"><rect x="-14" y="-14" width="92" height="92" fill="#ff00ff"/><path fill="rgb(102, 74, 255)" d="M32 -14h46v46H32zM-14 32h46v46h-46z"/></g></g></svg>`;
+
+        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      }
+
+      function animateFavicon() {
+        const frames = Array.from({ length: 24 }, (_, index) =>
+          checkerboardFavicon(index * 15),
+        );
+        let frame = 0;
+
+        setInterval(() => {
+          const previous = document.getElementById("favicon");
+          const favicon = document.createElement("link");
+
+          frame = (frame + 1) % frames.length;
+          favicon.id = "favicon";
+          favicon.rel = "icon";
+          favicon.type = "image/svg+xml";
+          favicon.href = frames[frame];
+
+          if (previous) previous.remove();
+          document.head.appendChild(favicon);
+        }, 180);
+      }
+
+      function forceSvgChildrenToBrandColor(root, colorName) {
+        const color = brandHex(colorName);
+        const elements = [root, ...root.querySelectorAll("*")];
+
+        elements.forEach((el) => {
+          el.setAttribute("data-color", colorName);
+          el.style.fill = "";
+          el.style.stroke = "";
+
+          const fill = el.getAttribute("fill");
+          const stroke = el.getAttribute("stroke");
+
+          if (fill !== "none") el.setAttribute("fill", color);
+          if (stroke && stroke !== "none") el.setAttribute("stroke", color);
+        });
+      }
+
+      function normalizeUploadedSvg(svg, slot) {
+        const originalWidth = parseFloat(svg.getAttribute("width")) || 120;
+        const originalHeight = parseFloat(svg.getAttribute("height")) || 90;
+        const slotWidth = parseFloat(slot.dataset.slotWidth) || 120;
+        const slotHeight = parseFloat(slot.dataset.slotHeight) || 90;
+
+        if (!svg.getAttribute("viewBox")) {
+          svg.setAttribute("viewBox", `0 0 ${originalWidth} ${originalHeight}`);
+        }
+
+        svg.removeAttribute("width");
+        svg.removeAttribute("height");
+        svg.setAttribute("x", "0");
+        svg.setAttribute("y", "0");
+        svg.setAttribute("width", slotWidth);
+        svg.setAttribute("height", slotHeight);
+        svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+        return svg;
+      }
+
+      function createSlotHitArea(slot) {
+        const width = parseFloat(slot.dataset.slotWidth) || 120;
+        const height = parseFloat(slot.dataset.slotHeight) || 90;
+        const hitArea = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "rect",
+        );
+
+        hitArea.setAttribute("x", "0");
+        hitArea.setAttribute("y", "0");
+        hitArea.setAttribute("width", width);
+        hitArea.setAttribute("height", height);
+        hitArea.setAttribute("fill", "none");
+        hitArea.setAttribute("pointer-events", "all");
+
+        return hitArea;
+      }
+
+      function handleSvgUpload(inputId, slotId) {
+        const input = document.getElementById(inputId);
+        const slot = document.getElementById(slotId);
+        const uploadText = document.getElementById(`${inputId}Text`);
+
+        input.addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+          if (uploadText) {
+            uploadText.textContent = file.name;
+            uploadText.dataset.hasFile = "true";
+          }
+
+          const reader = new FileReader();
+
+          reader.onload = (e) => {
+            importSvgIntoSlot(e.target.result, slot);
+          };
+
+          reader.readAsText(file);
+        });
+      }
+
+      function makeSlotOpenFileInput(slotId, inputId) {
+        const slot = document.getElementById(slotId);
+        const input = document.getElementById(inputId);
+        if (!slot || !input) return;
+
+        slot.setAttribute("role", "button");
+        slot.setAttribute("tabindex", "0");
+
+        slot.addEventListener("click", () => input.click());
+        slot.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+
+          event.preventDefault();
+          input.click();
+        });
+      }
+
+      function initializeLogo2PlaceholderHover() {
+        const slot = document.getElementById("logo2Slot");
+        const placeholder = document.getElementById("logo2PlaceholderText");
+        if (!slot || !placeholder) return;
+
+        const showPlus = () => {
+          placeholder.textContent = "+";
+          placeholder.setAttribute("font-size", "68");
+          placeholder.setAttribute("y", "69");
+        };
+        const restoreText = () => {
+          placeholder.textContent =
+            placeholder.dataset.placeholderText || placeholder.textContent;
+          placeholder.setAttribute("font-size", "12");
+          placeholder.setAttribute("y", "56");
+        };
+
+        slot.addEventListener("pointerenter", showPlus);
+        slot.addEventListener("pointerdown", showPlus);
+        slot.addEventListener("focus", showPlus);
+        slot.addEventListener("pointerleave", restoreText);
+        slot.addEventListener("blur", restoreText);
+      }
+
+      function importSvgIntoSlot(svgText, slot) {
+        const clean = cleanSvgText(svgText);
+        const svg = parseSvg(clean);
+        if (!svg) return;
+
+        const imported = document.importNode(svg, true);
+        normalizeUploadedSvg(imported, slot);
+
+        if (!slot.dataset.preserveColors) {
+          const logoColor = slot.dataset.logoColor || "black";
+          imported.setAttribute("data-color", logoColor);
+          forceSvgChildrenToBrandColor(imported, logoColor);
+        }
+
+        clearSlot(slot);
+        slot.appendChild(imported);
+        slot.appendChild(createSlotHitArea(slot));
+      }
+
+      async function loadDefaultLogo1() {
+        try {
+          const response = await fetch("logo.svg");
+          if (!response.ok) throw new Error("Could not load logo.svg");
+
+          const svgText = await response.text();
+          importSvgIntoSlot(svgText, document.getElementById("logo1Slot"));
+        } catch (error) {
+          console.warn(error);
+        }
+      }
+
+      function wrapSvgText(textEl, text, maxWidth, lineHeight, y) {
+        textEl.textContent = "";
+
+        let lineY = y;
+        let lineCount = 0;
+        const x = textEl.getAttribute("x");
+
+        textEl.setAttribute("y", y);
+
+        if (!text.trim()) {
+          const tspan = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "tspan",
+          );
+          tspan.setAttribute("x", x);
+          tspan.setAttribute("y", lineY);
+          tspan.textContent = " ";
+          textEl.appendChild(tspan);
+          return 1;
+        }
+
+        function appendLine(value) {
+          const tspan = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "tspan",
+          );
+          tspan.setAttribute("x", x);
+          tspan.setAttribute("y", lineY);
+          tspan.textContent = value || " ";
+          textEl.appendChild(tspan);
+
+          lineY += lineHeight;
+          lineCount += 1;
+
+          return tspan;
+        }
+
+        text
+          .replace(/\r\n/g, "\n")
+          .split("\n")
+          .forEach((sourceLine) => {
+            const words = sourceLine.trim().split(/\s+/).filter(Boolean);
+
+            if (!words.length) {
+              appendLine(" ");
+              return;
+            }
+
+            let line = "";
+            let tspan = appendLine("");
+
+            words.forEach((word) => {
+              const testLine = line ? line + " " + word : word;
+              tspan.textContent = testLine;
+
+              if (tspan.getComputedTextLength() > maxWidth && line) {
+                tspan.textContent = line;
+                line = word;
+                tspan = appendLine(line);
+              } else {
+                line = testLine;
+              }
+            });
+          });
+
+        return lineCount;
+      }
+
+      function applySemanticPreviewColors(svgRoot) {
+        svgRoot.querySelectorAll("[data-color]").forEach((el) => {
+          if (el.closest("[data-preserve-colors]")) return;
+
+          const colorName = el.dataset.color || "black";
+          const color = brandHex(colorName);
+
+          if (el.getAttribute("fill") !== "none") {
+            el.setAttribute("fill", color);
+          }
+
+          el.querySelectorAll("*").forEach((child) => {
+            if (!child.getAttribute("data-color"))
+              child.setAttribute("data-color", colorName);
+
+            if (child.getAttribute("fill") !== "none") {
+              child.setAttribute("fill", color);
+            }
+
+            if (
+              child.getAttribute("stroke") &&
+              child.getAttribute("stroke") !== "none"
+            ) {
+              child.setAttribute("stroke", color);
+            }
+          });
+        });
+      }
+
+      function expandUseElements(svgRoot) {
+        svgRoot.querySelectorAll("use").forEach((useEl) => {
+          const href =
+            useEl.getAttribute("href") || useEl.getAttribute("xlink:href");
+          if (!href || !href.startsWith("#")) return;
+
+          const referenced = [...svgRoot.querySelectorAll("[id]")].find(
+            (el) => el.id === href.slice(1),
+          );
+          if (!referenced) return;
+
+          const clone = referenced.cloneNode(true);
+          const replacement =
+            clone.tagName.toLowerCase() === "symbol"
+              ? document.createElementNS("http://www.w3.org/2000/svg", "g")
+              : clone;
+
+          if (replacement !== clone) {
+            while (clone.firstChild) replacement.appendChild(clone.firstChild);
+          }
+
+          const x = parseFloat(useEl.getAttribute("x")) || 0;
+          const y = parseFloat(useEl.getAttribute("y")) || 0;
+          const useTransform = useEl.getAttribute("transform") || "";
+          const cloneTransform = replacement.getAttribute("transform") || "";
+          const translate = x || y ? `translate(${x} ${y})` : "";
+          const transform = [useTransform, translate, cloneTransform]
+            .filter(Boolean)
+            .join(" ");
+
+          if (transform) replacement.setAttribute("transform", transform);
+          replacement.removeAttribute("id");
+
+          ["fill", "stroke", "stroke-width", "data-color"].forEach((attr) => {
+            const value = useEl.getAttribute(attr);
+            if (value && !replacement.getAttribute(attr))
+              replacement.setAttribute(attr, value);
+          });
+
+          useEl.replaceWith(replacement);
+        });
+      }
+
+      function applyLanguage(language) {
+        const dictionary = I18N[language] || I18N.ru;
+        const previousOptions = I18N[currentLanguage].subheadingOptions;
+        const subheadingInput = document.getElementById("subheadingInput");
+        const subheadingPresets = document.getElementById("subheadingPresets");
+        const paragraphInput = document.getElementById("paragraphInput");
+        const previousSubheadingValue = subheadingInput.value;
+        const previousSubheadingIndex = previousOptions.findIndex(
+          ([value]) => value === previousSubheadingValue,
+        );
+        const previousParagraph = paragraphInput.value.trim();
+
+        currentLanguage = language;
+        document.documentElement.lang = language;
+        document.title = dictionary.documentTitle;
+
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.dataset.i18n;
+          if (key === "fileEmpty" && el.dataset.hasFile === "true") return;
+          if (dictionary[key]) el.textContent = dictionary[key];
+        });
+
+        document
+          .getElementById("startHourInput")
+          .setAttribute("aria-label", dictionary.startAria);
+        document
+          .getElementById("endHourInput")
+          .setAttribute("aria-label", dictionary.endAria);
+
+        subheadingPresets.textContent = "";
+        dictionary.subheadingOptions.forEach(([value, label]) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "preset-chip";
+          button.dataset.value = value;
+          button.textContent = label;
+          button.addEventListener("click", () => {
+            subheadingInput.value = value;
+            updateTemplate();
+          });
+          subheadingPresets.appendChild(button);
+        });
+        if (previousSubheadingIndex >= 0) {
+          subheadingInput.value =
+            dictionary.subheadingOptions[previousSubheadingIndex][0];
+        }
+
+        if (
+          previousParagraph === LEGAL_DEFAULTS.ru ||
+          previousParagraph === LEGAL_DEFAULTS.uz
+        ) {
+          paragraphInput.value = LEGAL_DEFAULTS[language];
+        }
+
+        const fileText = document.getElementById("logo2UploadText");
+        if (fileText && fileText.dataset.hasFile !== "true") {
+          fileText.textContent = dictionary.fileEmpty;
+        }
+
+        const logoPlaceholder = document.getElementById("logo2PlaceholderText");
+        if (logoPlaceholder) {
+          logoPlaceholder.dataset.placeholderText = dictionary.logoPlaceholder;
+          logoPlaceholder.textContent = dictionary.logoPlaceholder;
+        }
+
+        updateTemplate();
+      }
+
+      function updateTemplate() {
+        const heading = getWorkingHoursHeading();
+        const subheading = (
+          document.getElementById("subheadingInput").value || " "
+        ).toLocaleLowerCase();
+        const paragraph =
+          document.getElementById("paragraphInput").value || " ";
+        const paragraphEl = document.getElementById("paragraphSvg");
+
+        let y = 234;
+
+        const headingLines = wrapSvgText(
+          document.getElementById("headingSvg"),
+          heading,
+          336,
+          42,
+          y,
+        );
+        y += headingLines * 42;
+
+        const subheadingLines = wrapSvgText(
+          document.getElementById("subheadingSvg"),
+          subheading,
+          336,
+          24,
+          y,
+        );
+        y += subheadingLines * 24 + 10;
+
+        const paragraphLines = wrapSvgText(
+          paragraphEl,
+          paragraph,
+          PARAGRAPH_MAX_WIDTH,
+          PARAGRAPH_LINE_HEIGHT,
+          y,
+        );
+        const paragraphY =
+          WHITE_RECT_HEIGHT -
+          WHITE_RECT_BOTTOM_PADDING -
+          (paragraphLines - 1) * PARAGRAPH_LINE_HEIGHT;
+        wrapSvgText(
+          paragraphEl,
+          paragraph,
+          PARAGRAPH_MAX_WIDTH,
+          PARAGRAPH_LINE_HEIGHT,
+          paragraphY,
+        );
+
+        applySemanticPreviewColors(document.getElementById("templateSvg"));
+      }
+
+      function getWorkingHoursHeading() {
+        const start = formatTime(
+          document.getElementById("startHourInput").value,
+          "08:00",
+        );
+        const end = formatTime(
+          document.getElementById("endHourInput").value,
+          "20:00",
+        );
+        return `${start}–${end}`;
+      }
+
+      function formatTime(value, fallback) {
+        return /^\d{2}:\d{2}$/.test(value) ? value : fallback;
+      }
+
+      function loadOutlineFont(file) {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          try {
+            wbSansOutlineFont = opentype.parse(e.target.result);
+            alert("Font loaded for outline export.");
+          } catch (error) {
+            wbSansOutlineFont = null;
+            alert("Could not load this font. Try another .otf or .ttf.");
+          }
+        };
+
+        reader.readAsArrayBuffer(file);
+      }
+
+      async function loadOutlineFontUrl(url) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Could not load ${url}`);
+
+        const buffer = await response.arrayBuffer();
+        return opentype.parse(buffer);
+      }
+
+      async function loadDefaultOutlineFonts() {
+        const [wbSansResult, interResult] = await Promise.allSettled([
+          loadOutlineFontUrl(WBSANS_OUTLINE_FONT_URL),
+          loadOutlineFontUrl(INTER_OUTLINE_FONT_URL),
+        ]);
+
+        wbSansOutlineFont =
+          wbSansResult.status === "fulfilled" ? wbSansResult.value : null;
+        interOutlineFont =
+          interResult.status === "fulfilled" ? interResult.value : null;
+
+        [wbSansResult, interResult].forEach((result) => {
+          if (result.status === "rejected") console.warn(result.reason);
+        });
+      }
+
+      function opentypePathToSvgD(path) {
+        return path.commands
+          .map((cmd) => {
+            if (cmd.type === "M") return `M ${cmd.x} ${cmd.y}`;
+            if (cmd.type === "L") return `L ${cmd.x} ${cmd.y}`;
+            if (cmd.type === "C")
+              return `C ${cmd.x1} ${cmd.y1} ${cmd.x2} ${cmd.y2} ${cmd.x} ${cmd.y}`;
+            if (cmd.type === "Q")
+              return `Q ${cmd.x1} ${cmd.y1} ${cmd.x} ${cmd.y}`;
+            if (cmd.type === "Z") return "Z";
+            return "";
+          })
+          .join(" ");
+      }
+
+      function outlineTextElement(textEl, font) {
+        const group = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "g",
+        );
+        const colorName = textEl.dataset.color || "black";
+        const fontSize = parseFloat(textEl.getAttribute("font-size")) || 16;
+        const letterSpacing =
+          parseFloat(textEl.getAttribute("letter-spacing")) || 0;
+        const textAnchor = textEl.getAttribute("text-anchor") || "start";
+        const tspans = [...textEl.querySelectorAll("tspan")];
+
+        group.setAttribute("data-color", colorName);
+
+        tspans.forEach((tspan) => {
+          const text = tspan.textContent || " ";
+          let x = parseFloat(tspan.getAttribute("x"));
+          const y = parseFloat(tspan.getAttribute("y"));
+          const glyphs = [...text].map((char) => font.charToGlyph(char));
+          const textWidth = glyphs.reduce((width, glyph, index) => {
+            const advance = (glyph.advanceWidth / font.unitsPerEm) * fontSize;
+            return (
+              width + advance + (index < glyphs.length - 1 ? letterSpacing : 0)
+            );
+          }, 0);
+
+          if (textAnchor === "middle") x -= textWidth / 2;
+          if (textAnchor === "end") x -= textWidth;
+
+          glyphs.forEach((glyph) => {
+            const path = glyph.getPath(x, y, fontSize);
+            const d = opentypePathToSvgD(path);
+
+            if (d.trim()) {
+              const pathEl = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "path",
+              );
+              pathEl.setAttribute("d", d);
+              pathEl.setAttribute("data-color", colorName);
+              pathEl.setAttribute("fill", brandHex(colorName));
+              group.appendChild(pathEl);
+            }
+
+            x +=
+              (glyph.advanceWidth / font.unitsPerEm) * fontSize + letterSpacing;
+          });
+        });
+
+        textEl.replaceWith(group);
+      }
+
+      function outlineAllText(svgRoot) {
+        if (!wbSansOutlineFont || !interOutlineFont) {
+          alert(
+            "Outline fonts are not loaded yet. If this keeps happening, open this folder through a local web server so the browser can fetch WBSans-Medium.otf and Inter-Medium.ttf.",
+          );
+          return false;
+        }
+
+        const outlineFonts = {
+          headingSvg: wbSansOutlineFont,
+          subheadingSvg: wbSansOutlineFont,
+          paragraphSvg: interOutlineFont,
+        };
+
+        Object.entries(outlineFonts).forEach(([id, font]) => {
+          const textEl = svgRoot.querySelector(`#${id}`);
+          if (textEl) outlineTextElement(textEl, font);
+        });
+
+        return true;
+      }
+
+      function tokenizePath(d) {
+        return (
+          d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) || []
+        );
+      }
+
+      function transformPoint(matrix, x, y) {
+        if (!matrix) return { x, y };
+
+        return {
+          x: matrix.a * x + matrix.c * y + matrix.e,
+          y: matrix.b * x + matrix.d * y + matrix.f,
+        };
+      }
+
+      function toMmPoint(point) {
+        return [point.x * SCALE, point.y * SCALE];
+      }
+
+      function getRootRelativeMatrix(pathEl, rootSvg) {
+        const pathMatrix = pathEl.getScreenCTM();
+        const rootMatrix = rootSvg.getScreenCTM();
+
+        if (!pathMatrix || !rootMatrix) return pathEl.getCTM();
+
+        return rootMatrix.inverse().multiply(pathMatrix);
+      }
+
+      function parsePathToJsPdfLines(pathEl, rootSvg) {
+        const d = pathEl.getAttribute("d");
+        const tokens = tokenizePath(d);
+        const matrix = getRootRelativeMatrix(pathEl, rootSvg);
+
+        let i = 0;
+        let cmd = "";
+        let cx = 0;
+        let cy = 0;
+        let sx = 0;
+        let sy = 0;
+        let lastCubicControl = null;
+        let lastQuadraticControl = null;
+        const lines = [];
+
+        function isCmd(token) {
+          return /^[a-zA-Z]$/.test(token);
+        }
+
+        function num() {
+          return parseFloat(tokens[i++]);
+        }
+
+        function addMove(x, y) {
+          const p = transformPoint(matrix, x, y);
+          const [mx, my] = toMmPoint(p);
+          lines.push({ op: "m", c: [mx, my] });
+          cx = x;
+          cy = y;
+          sx = x;
+          sy = y;
+        }
+
+        function addLine(x, y) {
+          const p = transformPoint(matrix, x, y);
+          const [mx, my] = toMmPoint(p);
+          lines.push({ op: "l", c: [mx, my] });
+          cx = x;
+          cy = y;
+          lastCubicControl = null;
+          lastQuadraticControl = null;
+        }
+
+        function addCurve(x1, y1, x2, y2, x, y) {
+          const p1 = transformPoint(matrix, x1, y1);
+          const p2 = transformPoint(matrix, x2, y2);
+          const p = transformPoint(matrix, x, y);
+
+          const [m1x, m1y] = toMmPoint(p1);
+          const [m2x, m2y] = toMmPoint(p2);
+          const [mx, my] = toMmPoint(p);
+
+          lines.push({ op: "c", c: [m1x, m1y, m2x, m2y, mx, my] });
+          cx = x;
+          cy = y;
+          lastCubicControl = { x: x2, y: y2 };
+          lastQuadraticControl = null;
+        }
+
+        function addQuadratic(qx, qy, x, y) {
+          const c1x = cx + (2 / 3) * (qx - cx);
+          const c1y = cy + (2 / 3) * (qy - cy);
+          const c2x = x + (2 / 3) * (qx - x);
+          const c2y = y + (2 / 3) * (qy - y);
+
+          addCurve(c1x, c1y, c2x, c2y, x, y);
+          lastCubicControl = null;
+          lastQuadraticControl = { x: qx, y: qy };
+        }
+
+        function addArc(rx, ry, angle, largeArcFlag, sweepFlag, x, y) {
+          if (!rx || !ry) {
+            addLine(x, y);
+            return;
+          }
+
+          const phi = (angle * Math.PI) / 180;
+          const cosPhi = Math.cos(phi);
+          const sinPhi = Math.sin(phi);
+          const dx = (cx - x) / 2;
+          const dy = (cy - y) / 2;
+          let x1p = cosPhi * dx + sinPhi * dy;
+          let y1p = -sinPhi * dx + cosPhi * dy;
+
+          rx = Math.abs(rx);
+          ry = Math.abs(ry);
+
+          const lambda = x1p ** 2 / rx ** 2 + y1p ** 2 / ry ** 2;
+          if (lambda > 1) {
+            const scale = Math.sqrt(lambda);
+            rx *= scale;
+            ry *= scale;
+          }
+
+          const sign = largeArcFlag === sweepFlag ? -1 : 1;
+          const numerator =
+            rx ** 2 * ry ** 2 - rx ** 2 * y1p ** 2 - ry ** 2 * x1p ** 2;
+          const denominator = rx ** 2 * y1p ** 2 + ry ** 2 * x1p ** 2;
+          const coef =
+            sign * Math.sqrt(Math.max(0, numerator / denominator || 0));
+          const cxp = (coef * rx * y1p) / ry;
+          const cyp = (-coef * ry * x1p) / rx;
+          const centerX =
+            cosPhi * cxp - sinPhi * cyp + (cx + x) / 2;
+          const centerY =
+            sinPhi * cxp + cosPhi * cyp + (cy + y) / 2;
+
+          function vectorAngle(ux, uy, vx, vy) {
+            const dot = ux * vx + uy * vy;
+            const len = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+            const sign = ux * vy - uy * vx < 0 ? -1 : 1;
+            return sign * Math.acos(Math.min(Math.max(dot / len, -1), 1));
+          }
+
+          const startAngle = vectorAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
+          let deltaAngle = vectorAngle(
+            (x1p - cxp) / rx,
+            (y1p - cyp) / ry,
+            (-x1p - cxp) / rx,
+            (-y1p - cyp) / ry,
+          );
+
+          if (!sweepFlag && deltaAngle > 0) deltaAngle -= Math.PI * 2;
+          if (sweepFlag && deltaAngle < 0) deltaAngle += Math.PI * 2;
+
+          const segments = Math.ceil(Math.abs(deltaAngle) / (Math.PI / 2));
+          const segmentAngle = deltaAngle / segments;
+
+          for (let segment = 0; segment < segments; segment += 1) {
+            const a1 = startAngle + segment * segmentAngle;
+            const a2 = a1 + segmentAngle;
+            const alpha = (4 / 3) * Math.tan((a2 - a1) / 4);
+
+            const p1 = {
+              x: Math.cos(a1) - alpha * Math.sin(a1),
+              y: Math.sin(a1) + alpha * Math.cos(a1),
+            };
+            const p2 = {
+              x: Math.cos(a2) + alpha * Math.sin(a2),
+              y: Math.sin(a2) - alpha * Math.cos(a2),
+            };
+            const p = { x: Math.cos(a2), y: Math.sin(a2) };
+
+            function map(point) {
+              return {
+                x: centerX + rx * point.x * cosPhi - ry * point.y * sinPhi,
+                y: centerY + rx * point.x * sinPhi + ry * point.y * cosPhi,
+              };
+            }
+
+            const c1 = map(p1);
+            const c2 = map(p2);
+            const end = map(p);
+            addCurve(c1.x, c1.y, c2.x, c2.y, end.x, end.y);
+          }
+
+          cx = x;
+          cy = y;
+        }
+
+        while (i < tokens.length) {
+          if (isCmd(tokens[i])) cmd = tokens[i++];
+
+          const relative = cmd === cmd.toLowerCase();
+          const C = cmd.toUpperCase();
+
+          if (C === "M") {
+            const x = num();
+            const y = num();
+            addMove(relative ? cx + x : x, relative ? cy + y : y);
+            lastCubicControl = null;
+            lastQuadraticControl = null;
+            cmd = relative ? "l" : "L";
+
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              const lx = num();
+              const ly = num();
+              addLine(relative ? cx + lx : lx, relative ? cy + ly : ly);
+            }
+          } else if (C === "L") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              const x = num();
+              const y = num();
+              addLine(relative ? cx + x : x, relative ? cy + y : y);
+            }
+          } else if (C === "H") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              const x = num();
+              addLine(relative ? cx + x : x, cy);
+            }
+          } else if (C === "V") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              const y = num();
+              addLine(cx, relative ? cy + y : y);
+            }
+          } else if (C === "C") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              let x1 = num(),
+                y1 = num(),
+                x2 = num(),
+                y2 = num(),
+                x = num(),
+                y = num();
+
+              if (relative) {
+                x1 += cx;
+                y1 += cy;
+                x2 += cx;
+                y2 += cy;
+                x += cx;
+                y += cy;
+              }
+
+              addCurve(x1, y1, x2, y2, x, y);
+            }
+          } else if (C === "S") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              let x2 = num(),
+                y2 = num(),
+                x = num(),
+                y = num();
+              const x1 = lastCubicControl ? 2 * cx - lastCubicControl.x : cx;
+              const y1 = lastCubicControl ? 2 * cy - lastCubicControl.y : cy;
+
+              if (relative) {
+                x2 += cx;
+                y2 += cy;
+                x += cx;
+                y += cy;
+              }
+
+              addCurve(x1, y1, x2, y2, x, y);
+            }
+          } else if (C === "Q") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              let qx = num(),
+                qy = num(),
+                x = num(),
+                y = num();
+
+              if (relative) {
+                qx += cx;
+                qy += cy;
+                x += cx;
+                y += cy;
+              }
+
+              addQuadratic(qx, qy, x, y);
+            }
+          } else if (C === "T") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              let x = num(),
+                y = num();
+              const qx = lastQuadraticControl
+                ? 2 * cx - lastQuadraticControl.x
+                : cx;
+              const qy = lastQuadraticControl
+                ? 2 * cy - lastQuadraticControl.y
+                : cy;
+
+              if (relative) {
+                x += cx;
+                y += cy;
+              }
+
+              addQuadratic(qx, qy, x, y);
+            }
+          } else if (C === "A") {
+            while (i < tokens.length && !isCmd(tokens[i])) {
+              const rx = num();
+              const ry = num();
+              const angle = num();
+              const largeArcFlag = num();
+              const sweepFlag = num();
+              let x = num();
+              let y = num();
+
+              if (relative) {
+                x += cx;
+                y += cy;
+              }
+
+              addArc(rx, ry, angle, largeArcFlag, sweepFlag, x, y);
+            }
+          } else if (C === "Z") {
+            lines.push({ op: "h", c: [] });
+            cx = sx;
+            cy = sy;
+            lastCubicControl = null;
+            lastQuadraticControl = null;
+          } else {
+            // Unsupported command.
+            // Minimal exporter intentionally skips them.
+            break;
+          }
+        }
+
+        return lines;
+      }
+
+      function rectToJsPdfLines(rectEl, rootSvg) {
+        const x = parseFloat(rectEl.getAttribute("x")) || 0;
+        const y = parseFloat(rectEl.getAttribute("y")) || 0;
+        const width = parseFloat(rectEl.getAttribute("width")) || 0;
+        const height = parseFloat(rectEl.getAttribute("height")) || 0;
+        const rx = Math.min(
+          parseFloat(rectEl.getAttribute("rx")) || 0,
+          width / 2,
+        );
+        const ry = Math.min(
+          parseFloat(rectEl.getAttribute("ry")) || rx,
+          height / 2,
+        );
+        const matrix = getRootRelativeMatrix(rectEl, rootSvg);
+        const lines = [];
+        const k = 0.5522847498;
+
+        function point(px, py) {
+          return toMmPoint(transformPoint(matrix, px, py));
+        }
+
+        function move(px, py) {
+          const [mx, my] = point(px, py);
+          lines.push({ op: "m", c: [mx, my] });
+        }
+
+        function line(px, py) {
+          const [mx, my] = point(px, py);
+          lines.push({ op: "l", c: [mx, my] });
+        }
+
+        function curve(x1, y1, x2, y2, px, py) {
+          const [m1x, m1y] = point(x1, y1);
+          const [m2x, m2y] = point(x2, y2);
+          const [mx, my] = point(px, py);
+          lines.push({ op: "c", c: [m1x, m1y, m2x, m2y, mx, my] });
+        }
+
+        if (!width || !height) return lines;
+
+        if (!rx && !ry) {
+          move(x, y);
+          line(x + width, y);
+          line(x + width, y + height);
+          line(x, y + height);
+          lines.push({ op: "h", c: [] });
+          return lines;
+        }
+
+        move(x + rx, y);
+        line(x + width - rx, y);
+        curve(
+          x + width - rx + rx * k,
+          y,
+          x + width,
+          y + ry - ry * k,
+          x + width,
+          y + ry,
+        );
+        line(x + width, y + height - ry);
+        curve(
+          x + width,
+          y + height - ry + ry * k,
+          x + width - rx + rx * k,
+          y + height,
+          x + width - rx,
+          y + height,
+        );
+        line(x + rx, y + height);
+        curve(
+          x + rx - rx * k,
+          y + height,
+          x,
+          y + height - ry + ry * k,
+          x,
+          y + height - ry,
+        );
+        line(x, y + ry);
+        curve(x, y + ry - ry * k, x + rx - rx * k, y, x + rx, y);
+        lines.push({ op: "h", c: [] });
+
+        return lines;
+      }
+
+      function ellipseToJsPdfLines(el, rootSvg) {
+        const tagName = el.tagName.toLowerCase();
+        const cx = parseFloat(el.getAttribute("cx")) || 0;
+        const cy = parseFloat(el.getAttribute("cy")) || 0;
+        const rx =
+          tagName === "circle"
+            ? parseFloat(el.getAttribute("r")) || 0
+            : parseFloat(el.getAttribute("rx")) || 0;
+        const ry =
+          tagName === "circle"
+            ? rx
+            : parseFloat(el.getAttribute("ry")) || 0;
+        const matrix = getRootRelativeMatrix(el, rootSvg);
+        const lines = [];
+        const k = 0.5522847498;
+
+        if (!rx || !ry) return lines;
+
+        function point(px, py) {
+          return toMmPoint(transformPoint(matrix, px, py));
+        }
+
+        function move(px, py) {
+          const [mx, my] = point(px, py);
+          lines.push({ op: "m", c: [mx, my] });
+        }
+
+        function curve(x1, y1, x2, y2, px, py) {
+          const [m1x, m1y] = point(x1, y1);
+          const [m2x, m2y] = point(x2, y2);
+          const [mx, my] = point(px, py);
+          lines.push({ op: "c", c: [m1x, m1y, m2x, m2y, mx, my] });
+        }
+
+        move(cx + rx, cy);
+        curve(cx + rx, cy + ry * k, cx + rx * k, cy + ry, cx, cy + ry);
+        curve(cx - rx * k, cy + ry, cx - rx, cy + ry * k, cx - rx, cy);
+        curve(cx - rx, cy - ry * k, cx - rx * k, cy - ry, cx, cy - ry);
+        curve(cx + rx * k, cy - ry, cx + rx, cy - ry * k, cx + rx, cy);
+        lines.push({ op: "h", c: [] });
+
+        return lines;
+      }
+
+      function pointsToJsPdfLines(el, rootSvg, closePath) {
+        const pointMatches =
+          (el.getAttribute("points") || "").match(
+            /[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g,
+          ) || [];
+        const points = pointMatches.map(Number);
+        const matrix = getRootRelativeMatrix(el, rootSvg);
+        const lines = [];
+
+        for (let i = 0; i + 1 < points.length; i += 2) {
+          const point = transformPoint(matrix, points[i], points[i + 1]);
+          const [mx, my] = toMmPoint(point);
+          lines.push({ op: i === 0 ? "m" : "l", c: [mx, my] });
+        }
+
+        if (closePath && lines.length) lines.push({ op: "h", c: [] });
+
+        return lines;
+      }
+
+      function lineToJsPdfLines(el, rootSvg) {
+        const matrix = getRootRelativeMatrix(el, rootSvg);
+        const lines = [];
+        const points = [
+          [parseFloat(el.getAttribute("x1")) || 0, parseFloat(el.getAttribute("y1")) || 0],
+          [parseFloat(el.getAttribute("x2")) || 0, parseFloat(el.getAttribute("y2")) || 0],
+        ];
+
+        points.forEach(([x, y], index) => {
+          const point = transformPoint(matrix, x, y);
+          const [mx, my] = toMmPoint(point);
+          lines.push({ op: index === 0 ? "m" : "l", c: [mx, my] });
+        });
+
+        return lines;
+      }
+
+      function shapeToJsPdfLines(el, rootSvg) {
+        const tagName = el.tagName.toLowerCase();
+
+        if (tagName === "rect") return rectToJsPdfLines(el, rootSvg);
+        if (tagName === "path") return parsePathToJsPdfLines(el, rootSvg);
+        if (tagName === "circle" || tagName === "ellipse")
+          return ellipseToJsPdfLines(el, rootSvg);
+        if (tagName === "polygon") return pointsToJsPdfLines(el, rootSvg, true);
+        if (tagName === "polyline") return pointsToJsPdfLines(el, rootSvg, false);
+        if (tagName === "line") return lineToJsPdfLines(el, rootSvg);
+
+        return [];
+      }
+
+      function getNearestColorName(el) {
+        let node = el;
+
+        while (node && node.nodeType === 1) {
+          if (node.dataset && node.dataset.color) return node.dataset.color;
+          if (node.dataset && node.dataset.logoColor)
+            return node.dataset.logoColor;
+          node = node.parentElement;
+        }
+
+        return "black";
+      }
+
+      function parseRgbColor(value) {
+        if (!value || value === "none" || value.startsWith("url(")) return null;
+
+        const namedColors = {
+          black: { r: 0, g: 0, b: 0 },
+          white: { r: 255, g: 255, b: 255 },
+          red: { r: 255, g: 0, b: 0 },
+          green: { r: 0, g: 128, b: 0 },
+          blue: { r: 0, g: 0, b: 255 },
+        };
+        const named = namedColors[value.trim().toLowerCase()];
+        if (named) return named;
+
+        const hex = value.trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+        if (hex) {
+          const raw = hex[1];
+          const full =
+            raw.length === 3
+              ? raw
+                  .split("")
+                  .map((char) => char + char)
+                  .join("")
+              : raw;
+
+          return {
+            r: parseInt(full.slice(0, 2), 16),
+            g: parseInt(full.slice(2, 4), 16),
+            b: parseInt(full.slice(4, 6), 16),
+          };
+        }
+
+        const rgb = value.trim().match(/^rgba?\(([^)]+)\)$/i);
+        if (!rgb) return null;
+
+        const channels = rgb[1]
+          .replace("/", " ")
+          .split(/[\s,]+/)
+          .filter(Boolean)
+          .slice(0, 3)
+          .map(Number);
+        if (channels.length < 3 || channels.some(Number.isNaN)) return null;
+
+        return {
+          r: channels[0],
+          g: channels[1],
+          b: channels[2],
+        };
+      }
+
+      function getRenderedPaintColor(el, property) {
+        const computed = window.getComputedStyle(el)[property];
+        const color = parseRgbColor(computed);
+
+        if (color) return color;
+
+        return parseRgbColor(el.getAttribute(property));
+      }
+
+      function getPaintCmyk(el, property) {
+        if (el.closest("[data-preserve-colors]")) {
+          const rgb = getRenderedPaintColor(el, property);
+          return rgb ? rgbToCmyk(rgb) : BRAND_COLORS.black;
+        }
+
+        return BRAND_COLORS[getNearestColorName(el)] || BRAND_COLORS.black;
+      }
+
+      function getRenderedPaintValue(el, property) {
+        return (
+          window.getComputedStyle(el)[property] ||
+          el.getAttribute(property) ||
+          "none"
+        );
+      }
+
+      function drawShapeElementAsCmyk(doc, el, rootSvg) {
+        if (el.closest("defs, symbol, clipPath, mask, pattern, marker")) return;
+
+        const lines = shapeToJsPdfLines(el, rootSvg);
+
+        if (!lines.length) return;
+
+        const tagName = el.tagName.toLowerCase();
+        const fill = getRenderedPaintValue(el, "fill");
+        const stroke = getRenderedPaintValue(el, "stroke");
+        const hasFill =
+          fill !== "none" && tagName !== "line" && tagName !== "polyline";
+        const hasStroke = stroke !== "none";
+
+        if (hasFill) {
+          setCmykFillValue(doc, getPaintCmyk(el, "fill"));
+          doc.path(lines);
+          doc.fill();
+        }
+
+        if (hasStroke) {
+          const strokeWidth =
+            parseFloat(window.getComputedStyle(el).strokeWidth) ||
+            parseFloat(el.getAttribute("stroke-width")) ||
+            1;
+          setCmykStrokeValue(doc, getPaintCmyk(el, "stroke"));
+          doc.setLineWidth(strokeWidth * SCALE);
+          doc.path(lines);
+          doc.stroke();
+        }
+      }
+
+      function applyTemplateClip(doc, rootSvg) {
+        const clipEl = [...rootSvg.children].find(
+          (el) =>
+            el.tagName.toLowerCase() === "rect" && el.dataset.color === "red",
+        );
+
+        if (!clipEl || typeof doc.clip !== "function") return () => {};
+
+        const lines = rectToJsPdfLines(clipEl, rootSvg);
+        if (!lines.length) return () => {};
+
+        if (typeof doc.saveGraphicsState === "function")
+          doc.saveGraphicsState();
+
+        doc.path(lines);
+        doc.clip();
+
+        if (typeof doc.discardPath === "function") doc.discardPath();
+
+        return () => {
+          if (typeof doc.restoreGraphicsState === "function")
+            doc.restoreGraphicsState();
+        };
+      }
+
+      function appendHiddenSvgClone(clone) {
+        clone.style.position = "absolute";
+        clone.style.left = "0";
+        clone.style.top = "0";
+        clone.style.width = "420px";
+        clone.style.height = `${PAGE_HEIGHT_PX}px`;
+        clone.style.opacity = "0";
+        clone.style.pointerEvents = "none";
+        clone.setAttribute("width", "420");
+        clone.setAttribute("height", PAGE_HEIGHT_PX);
+        document.body.appendChild(clone);
+      }
+
+      async function exportPdf() {
+        if (outlineFontLoadPromise) await outlineFontLoadPromise;
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+        updateTemplate();
+
+        const sourceSvg = document.getElementById("templateSvg");
+        const clone = sourceSvg.cloneNode(true);
+
+        expandUseElements(clone);
+        applySemanticPreviewColors(clone);
+        appendHiddenSvgClone(clone);
+
+        const outlined = outlineAllText(clone);
+        if (!outlined) {
+          clone.remove();
+          return;
+        }
+
+        const doc = new jsPDF({
+          orientation: "portrait",
+          unit: "mm",
+          format: [PAGE_MM, PAGE_HEIGHT_MM],
+          compress: true,
+        });
+
+        setCmykFill(doc, "white");
+        doc.rect(0, 0, PAGE_MM, PAGE_HEIGHT_MM, "F");
+
+        const restoreClip = applyTemplateClip(doc, clone);
+
+        clone
+          .querySelectorAll("path, rect, circle, ellipse, polygon, polyline, line")
+          .forEach((el) => {
+            drawShapeElementAsCmyk(doc, el, clone);
+          });
+
+        restoreClip();
+
+        clone.remove();
+
+        doc.save("hours.pdf");
+      }
+
+      document
+        .getElementById("fontUpload")
+        .addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          if (file) loadOutlineFont(file);
+        });
+
+      [
+        "startHourInput",
+        "endHourInput",
+        "subheadingInput",
+        "paragraphInput",
+      ].forEach((id) => {
+        document.getElementById(id).addEventListener("input", updateTemplate);
+        document.getElementById(id).addEventListener("change", updateTemplate);
+      });
+
+      document
+        .getElementById("languageInput")
+        .addEventListener("change", (event) => {
+          applyLanguage(event.target.value);
+        });
+
+      handleSvgUpload("logo2Upload", "logo2Slot");
+      makeSlotOpenFileInput("logo2Slot", "logo2Upload");
+      initializeLogo2PlaceholderHover();
+      loadDefaultLogo1();
+
+      document.getElementById("exportBtn").addEventListener("click", exportPdf);
+
+      outlineFontLoadPromise = loadDefaultOutlineFonts();
+
+      if (document.fonts) {
+        document.fonts.load('500 44px "WBSans"').then(updateTemplate);
+      }
+
+      populateTimeSelects();
+      animateFavicon();
+      applyLanguage(document.getElementById("languageInput").value);
+    </script>
+  </body>
+</html>
