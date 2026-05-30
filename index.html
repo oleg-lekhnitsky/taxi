@@ -329,6 +329,7 @@ text-transform: lowercase;
       }
 
       .stage {
+        position: relative;
         display: grid;
         place-items: center;
         padding: 40px;
@@ -338,6 +339,73 @@ text-transform: lowercase;
         margin: 12px;
         border-radius: 24px;
         perspective: 1100px;
+      }
+
+      .sheet-metadata {
+        position: absolute;
+        left: 20px;
+        bottom: 20px;
+        color: #71717a;
+        font-family: "InterVariable", "Inter", Helvetica, Arial, sans-serif;
+        font-size: 10px;
+        line-height: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .sheet-color-mode {
+        display: flex;
+        width: fit-content;
+        gap: 2px;
+        margin-top: 6px;
+        padding: 2px;
+        border-radius: 8px;
+        background: #f4f4f5;
+      }
+
+      .sheet-color-mode button {
+        width: auto;
+        margin: 0;
+        padding: 2px 6px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #71717a;
+        font-family: inherit;
+        font-size: 10px;
+        line-height: 16px;
+        box-shadow: none;
+      }
+
+      .sheet-color-mode button[aria-pressed="true"] {
+        background: #ffffff;
+        color: #18181b;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      }
+
+      .sheet-metadata p {
+        margin: 0;
+      }
+
+      .sheet-colors {
+        display: grid;
+        gap: 2px;
+        margin-top: 6px;
+        background-color: rgb(250, 250, 250);
+        padding: 12px;
+        border-radius: 20px;
+      }
+
+      .sheet-color {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .sheet-color-swatch {
+        width: 10px;
+        height: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
       }
 
       .sheet-wrap {
@@ -551,7 +619,7 @@ text-transform: lowercase;
     </aside>
 
     <main class="stage">
-      <div class="sheet-wrap" data-color="red">
+      <div class="sheet-wrap" data-color="pink">
         <svg
           id="templateSvg"
           viewBox="0 0 420 513"
@@ -570,7 +638,7 @@ text-transform: lowercase;
             rx="130"
             ry="130"
             fill="none"
-            data-color="red"
+            data-color="pink"
           />
           <g
             clip-path="url(#templateBackgroundClip)"
@@ -582,7 +650,7 @@ text-transform: lowercase;
               width="210"
               height="256.5"
               fill="#ff00ff"
-              data-color="red"
+              data-color="pink"
             />
             <rect
               x="210"
@@ -590,7 +658,7 @@ text-transform: lowercase;
               width="210"
               height="256.5"
               fill="#7F30E3"
-              data-color="violet"
+              data-color="purple"
             />
             <rect
               x="0"
@@ -598,7 +666,7 @@ text-transform: lowercase;
               width="210"
               height="256.5"
               fill="#7F30E3"
-              data-color="violet"
+              data-color="purple"
             />
             <rect
               x="210"
@@ -606,11 +674,11 @@ text-transform: lowercase;
               width="210"
               height="256.5"
               fill="#ff00ff"
-              data-color="red"
+              data-color="pink"
             />
           </g>
           <rect
-            x="24"
+            x="23"
             y="24"
             width="374"
             height="374"
@@ -743,6 +811,21 @@ text-transform: lowercase;
         </svg>
         <div class="sheet-gloss" aria-hidden="true"></div>
       </div>
+      <div class="sheet-metadata">
+        <p id="sheetDimensions"></p>
+        <div class="sheet-color-mode" aria-label="Color reference system">
+          <button type="button" data-color-mode="cmyk" aria-pressed="true">
+            CMYK
+          </button>
+          <button type="button" data-color-mode="pantone" aria-pressed="false">
+            Pantone
+          </button>
+          <button type="button" data-color-mode="ral" aria-pressed="false">
+            RAL
+          </button>
+        </div>
+        <div class="sheet-colors" id="sheetColors"></div>
+      </div>
     </main>
 
     <script>
@@ -765,9 +848,18 @@ text-transform: lowercase;
       const BRAND_COLORS = {
         white: { c: 0, m: 0, y: 0, k: 0 },
         black: { c: 0, m: 0, y: 0, k: 100 },
-        red: { c: 8, m: 90, y: 0, k: 0 },
-        violet: { c: 75, m: 92, y: 0, k: 0 },
+        pink: { c: 8, m: 90, y: 0, k: 0 },
+        purple: { c: 75, m: 92, y: 0, k: 0 },
       };
+
+      const BRAND_COLOR_REFERENCES = {
+        white: { pantone: "White", ral: "-" },
+        black: { pantone: "Black C", ral: "9005" },
+        pink: { pantone: "~ 232 C", ral: "~ 4003" },
+        purple: { pantone: "~ 2091 C", ral: "~ 4005" },
+      };
+
+      let sheetColorMode = "cmyk";
 
       const WBSANS_OUTLINE_FONT_URL = "WBSans-Medium.otf";
       const INTER_OUTLINE_FONT_URL = "Inter-Medium.ttf";
@@ -938,6 +1030,48 @@ text-transform: lowercase;
       function populateTimeSelects() {
         ["startHourInput", "endHourInput"].forEach((id) => {
           populateTimeSelect(document.getElementById(id));
+        });
+      }
+
+      function updateSheetDimensions() {
+        const dimensions = document.getElementById("sheetDimensions");
+        const colors = document.getElementById("sheetColors");
+        if (!dimensions || !colors) return;
+
+        dimensions.textContent = `${PAGE_MM} × ${PAGE_HEIGHT_MM.toFixed(1)} mm`;
+        colors.textContent = "";
+
+        Object.entries(BRAND_COLORS).forEach(([name, color]) => {
+          const row = document.createElement("div");
+          const swatch = document.createElement("span");
+          const label = document.createElement("span");
+
+          row.className = "sheet-color";
+          swatch.className = "sheet-color-swatch";
+          swatch.style.background = rgbHexFromCmyk(color);
+          label.textContent =
+            sheetColorMode === "cmyk"
+              ? `${name}: C${color.c} M${color.m} Y${color.y} K${color.k}`
+              : `${name}: ${BRAND_COLOR_REFERENCES[name][sheetColorMode]}`;
+          row.append(swatch, label);
+          colors.appendChild(row);
+        });
+      }
+
+      function initializeSheetColorMode() {
+        document.querySelectorAll("[data-color-mode]").forEach((button) => {
+          button.addEventListener("click", () => {
+            sheetColorMode = button.dataset.colorMode;
+
+            document.querySelectorAll("[data-color-mode]").forEach((item) => {
+              item.setAttribute(
+                "aria-pressed",
+                String(item.dataset.colorMode === sheetColorMode),
+              );
+            });
+
+            updateSheetDimensions();
+          });
         });
       }
 
@@ -2258,7 +2392,7 @@ text-transform: lowercase;
       function applyTemplateClip(doc, rootSvg) {
         const clipEl = [...rootSvg.children].find(
           (el) =>
-            el.tagName.toLowerCase() === "rect" && el.dataset.color === "red",
+            el.tagName.toLowerCase() === "rect" && el.dataset.color === "pink",
         );
 
         if (!clipEl || typeof doc.clip !== "function") return () => {};
@@ -2375,6 +2509,8 @@ text-transform: lowercase;
       }
 
       populateTimeSelects();
+      updateSheetDimensions();
+      initializeSheetColorMode();
       initializeTemplateTilt();
       applyLanguage(document.getElementById("languageInput").value);
     </script>
