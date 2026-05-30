@@ -332,7 +332,9 @@ text-transform: lowercase;
         display: grid;
         place-items: center;
         padding: 40px;
-        background-color: white;
+        background-color: #ffffff;
+        background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+        background-size: 24px 24px;
         margin: 12px;
         border-radius: 24px;
         perspective: 1100px;
@@ -343,7 +345,7 @@ text-transform: lowercase;
         width: 420px;
         height: 513px;
         border-radius: 130px;
-        box-shadow: 0 40px 160px rgba(0, 0, 0, 0.1);
+
         overflow: hidden;
         transform-style: preserve-3d;
         will-change: transform, box-shadow;
@@ -958,7 +960,7 @@ text-transform: lowercase;
 
           animationFrame = window.requestAnimationFrame(() => {
             template.style.transform = `rotateX(${-y * 15}deg) rotateY(${x * 15}deg) scale(1.012)`;
-            template.style.boxShadow = `${-x * 24}px ${40 - y * 24}px 150px rgba(0, 0, 0, 0.16)`;
+            template.style.boxShadow = `${-x * 24}px ${40 - y * 24}px 100px rgba(0, 0, 0, 0.1)`;
             if (gloss) {
               gloss.style.setProperty("--gloss-x", `${(1 - x) * 100}%`);
               gloss.style.setProperty("--gloss-y", `${(1 - y) * 100}%`);
