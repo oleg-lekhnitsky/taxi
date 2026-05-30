@@ -474,6 +474,17 @@ border: 1px solid;
       </div>
 
       <div class="field">
+        <label for="brandNameInput" data-i18n="brandNameLabel"
+          >Название таксопарка, если нет логотипа</label
+        >
+        <input
+          id="brandNameInput"
+          data-i18n-placeholder="brandNamePlaceholder"
+          placeholder="Название таксопарка"
+        />
+      </div>
+
+      <div class="field">
         <label id="logo2UploadLabel" for="logo2Upload" data-i18n="logoLabel"
           >Ваш векторный логотип в формате SVG</label
         >
@@ -575,7 +586,7 @@ border: 1px solid;
 
           <g
             id="logo2Slot"
-            transform="translate(135 54)"
+            transform="translate(135 60)"
             data-preserve-colors="true"
             data-slot-width="150"
             data-slot-height="105"
@@ -596,6 +607,8 @@ border: 1px solid;
               fill="none"
               stroke="#cccccc"
               stroke-dasharray="5 4"
+              id="logo2PlaceholderBorder"
+              data-preview-only="true"
             />
             <text
               id="logo2PlaceholderText"
@@ -610,6 +623,18 @@ border: 1px solid;
               Ваш логотип
             </text>
           </g>
+
+          <text
+            id="brandNameSvg"
+            data-color="black"
+            x="210"
+            y="116"
+            font-family="WBSans, Helvetica, Arial, sans-serif"
+            font-size="32"
+            font-weight="500"
+            text-anchor="middle"
+            fill="#000000"
+          ></text>
 
           <text
             id="headingSvg"
@@ -695,6 +720,10 @@ border: 1px solid;
       const WHITE_RECT_BOTTOM_PADDING = 28;
       const PARAGRAPH_LINE_HEIGHT = 12;
       const PARAGRAPH_MAX_WIDTH = 280;
+      const BRAND_NAME_MAX_WIDTH = 180;
+      const BRAND_NAME_LINE_HEIGHT = 30;
+      const BRAND_NAME_SLOT_Y = 54;
+      const BRAND_NAME_SLOT_HEIGHT = 105;
 
       const BRAND_COLORS = {
         white: { c: 0, m: 0, y: 0, k: 0 },
@@ -720,6 +749,8 @@ border: 1px solid;
           hoursLabel: "Время работы",
           daysLabel: "Дни работы",
           legalLabel: "Юридическая информация, контакты. Оставьте пустым, если не требуется",
+          brandNameLabel: "Название таксопарка, если нет логотипа",
+          brandNamePlaceholder: "Название таксопарка",
           logoLabel: "Ваш векторный логотип в формате SVG",
           fileEmpty: "SVG файл не выбран",
           fileAction: "Выбрать",
@@ -745,6 +776,8 @@ border: 1px solid;
           daysLabel: "Ish kunlari",
           legalLabel:
             "Yuridik ma’lumotlar va kontaktlar. Kerak bo‘lmasa, bo‘sh qoldiring",
+          brandNameLabel: "Logotip bo‘lmasa, taksopark nomi",
+          brandNamePlaceholder: "Taksopark nomi",
           logoLabel: "SVG formatidagi vektor logotipingiz",
           fileEmpty: "SVG fayl tanlanmagan",
           fileAction: "Tanlash",
@@ -1060,8 +1093,10 @@ border: 1px solid;
         }
 
         clearSlot(slot);
+        slot.dataset.hasLogo = "true";
         slot.appendChild(imported);
         slot.appendChild(createSlotHitArea(slot));
+        updateTemplate();
       }
 
       async function loadDefaultLogo1() {
@@ -1238,6 +1273,11 @@ border: 1px solid;
           if (dictionary[key]) el.textContent = dictionary[key];
         });
 
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const key = el.dataset.i18nPlaceholder;
+          if (dictionary[key]) el.setAttribute("placeholder", dictionary[key]);
+        });
+
         document
           .getElementById("startHourInput")
           .setAttribute("aria-label", dictionary.startAria);
@@ -1292,6 +1332,46 @@ border: 1px solid;
         const paragraph =
           document.getElementById("paragraphInput").value || " ";
         const paragraphEl = document.getElementById("paragraphSvg");
+        const brandName =
+          document.getElementById("brandNameInput").value.trim() || " ";
+        const brandNameEl = document.getElementById("brandNameSvg");
+        const hasLogo2 =
+          document.getElementById("logo2Slot").dataset.hasLogo === "true";
+        const logo2Placeholder = document.getElementById(
+          "logo2PlaceholderText",
+        );
+        const logo2PlaceholderBorder = document.getElementById(
+          "logo2PlaceholderBorder",
+        );
+        const showLogo2Placeholder = !hasLogo2 && !brandName.trim();
+
+        const renderedBrandName = hasLogo2 ? " " : brandName;
+        const brandNameLines = wrapSvgText(
+          brandNameEl,
+          renderedBrandName,
+          BRAND_NAME_MAX_WIDTH,
+          BRAND_NAME_LINE_HEIGHT,
+          BRAND_NAME_SLOT_Y,
+        );
+        const brandNameY =
+          BRAND_NAME_SLOT_Y +
+          (BRAND_NAME_SLOT_HEIGHT -
+            (brandNameLines - 1) * BRAND_NAME_LINE_HEIGHT) /
+            2 +
+          25;
+        wrapSvgText(
+          brandNameEl,
+          renderedBrandName,
+          BRAND_NAME_MAX_WIDTH,
+          BRAND_NAME_LINE_HEIGHT,
+          brandNameY,
+        );
+        if (logo2Placeholder)
+          logo2Placeholder.style.display = showLogo2Placeholder ? "" : "none";
+        if (logo2PlaceholderBorder)
+          logo2PlaceholderBorder.style.display = showLogo2Placeholder
+            ? ""
+            : "none";
 
         let y = 240;
 
@@ -1427,15 +1507,23 @@ border: 1px solid;
           const glyphs = [...text].map((char) => font.charToGlyph(char));
           const textWidth = glyphs.reduce((width, glyph, index) => {
             const advance = (glyph.advanceWidth / font.unitsPerEm) * fontSize;
+            const nextGlyph = glyphs[index + 1];
+            const kerning = nextGlyph
+              ? (font.getKerningValue(glyph, nextGlyph) / font.unitsPerEm) *
+                fontSize
+              : 0;
             return (
-              width + advance + (index < glyphs.length - 1 ? letterSpacing : 0)
+              width +
+              advance +
+              kerning +
+              (index < glyphs.length - 1 ? letterSpacing : 0)
             );
           }, 0);
 
           if (textAnchor === "middle") x -= textWidth / 2;
           if (textAnchor === "end") x -= textWidth;
 
-          glyphs.forEach((glyph) => {
+          glyphs.forEach((glyph, index) => {
             const path = glyph.getPath(x, y, fontSize);
             const d = opentypePathToSvgD(path);
 
@@ -1450,8 +1538,16 @@ border: 1px solid;
               group.appendChild(pathEl);
             }
 
+            const nextGlyph = glyphs[index + 1];
+            const kerning = nextGlyph
+              ? (font.getKerningValue(glyph, nextGlyph) / font.unitsPerEm) *
+                fontSize
+              : 0;
+
             x +=
-              (glyph.advanceWidth / font.unitsPerEm) * fontSize + letterSpacing;
+              (glyph.advanceWidth / font.unitsPerEm) * fontSize +
+              kerning +
+              (index < glyphs.length - 1 ? letterSpacing : 0);
           });
         });
 
@@ -1467,6 +1563,7 @@ border: 1px solid;
         }
 
         const outlineFonts = {
+          brandNameSvg: wbSansOutlineFont,
           headingSvg: wbSansOutlineFont,
           subheadingSvg: wbSansOutlineFont,
           paragraphSvg: interOutlineFont,
@@ -2080,6 +2177,7 @@ border: 1px solid;
       }
 
       function drawShapeElementAsCmyk(doc, el, rootSvg) {
+        if (el.closest("[data-preview-only]")) return;
         if (el.closest("defs, symbol, clipPath, mask, pattern, marker")) return;
 
         const lines = shapeToJsPdfLines(el, rootSvg);
@@ -2205,6 +2303,7 @@ border: 1px solid;
         "endHourInput",
         "subheadingInput",
         "paragraphInput",
+        "brandNameInput",
       ].forEach((id) => {
         document.getElementById(id).addEventListener("input", updateTemplate);
         document.getElementById(id).addEventListener("change", updateTemplate);
