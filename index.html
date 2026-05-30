@@ -29,7 +29,7 @@
       id="favicon"
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3CclipPath id='a'%3E%3Crect width='64' height='64' rx='14'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Crect width='64' height='64' fill='%23ff00ff'/%3E%3Cpath fill='rgb(102, 74, 255)' d='M32 0h32v32H32zM0 32h32v32H0z'/%3E%3C/g%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3CclipPath id='a'%3E%3Crect width='64' height='64' rx='14'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Crect width='64' height='64' fill='%23ff00ff'/%3E%3Cpath fill='%237F30E3' d='M32 0h32v32H32zM0 32h32v32H0z'/%3E%3C/g%3E%3C/svg%3E"
     />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -198,7 +198,7 @@ border: 1px solid;
       input:focus,
       select:focus,
       textarea:focus {
-        border-color: #661aff;
+        border-color: #7F30E3;
       }
 
       input::placeholder,
@@ -287,7 +287,7 @@ border: 1px solid;
 
       button:hover {
         transition: all 0.05ms;
-        background: #661aff;
+        background: #7F30E3;
         border: none;
       }
 
@@ -327,22 +327,34 @@ border: 1px solid;
         background-color: white;
         margin: 12px;
         border-radius: 24px;
+        perspective: 1100px;
       }
 
       .sheet-wrap {
         width: 420px;
-        height: 540px;
-        border-radius: 100px;
+        height: 513px;
+        border-radius: 130px;
         box-shadow: 0 40px 160px rgba(0, 0, 0, 0.1);
         overflow: hidden;
+        transform-style: preserve-3d;
+        will-change: transform, box-shadow;
+        transition:
+          transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .sheet-wrap {
+          transition: none;
+        }
       }
 
       #templateSvg {
         width: 420px;
-        height: 540px;
+        height: 513px;
         display: block;
-        background: #e61a33;
-        border-radius: 100px;
+        background: transparent;
+        border-radius: 130px;
         overflow: hidden;
       }
 
@@ -372,10 +384,12 @@ border: 1px solid;
         0% {
           opacity: 0;
           transform: scale(0.72) rotate(-18deg);
+          
         }
         60% {
           opacity: 1;
           transform: scale(1.08) rotate(4deg);
+          
         }
         100% {
           opacity: 1;
@@ -493,33 +507,75 @@ border: 1px solid;
       <div class="sheet-wrap" data-color="red">
         <svg
           id="templateSvg"
-          viewBox="0 0 420 540"
+          viewBox="0 0 420 513"
           xmlns="http://www.w3.org/2000/svg"
         >
+          <defs>
+            <clipPath id="templateBackgroundClip">
+              <rect width="420" height="513" rx="130" ry="130" />
+            </clipPath>
+          </defs>
           <rect
             x="0"
             y="0"
             width="420"
-            height="540"
-            rx="100"
-            ry="100"
-            fill="#e61a33"
+            height="513"
+            rx="130"
+            ry="130"
+            fill="none"
             data-color="red"
           />
+          <g
+            clip-path="url(#templateBackgroundClip)"
+            data-preserve-colors="true"
+          >
+            <rect
+              x="0"
+              y="0"
+              width="210"
+              height="256.5"
+              fill="#ff00ff"
+              data-color="red"
+            />
+            <rect
+              x="210"
+              y="0"
+              width="210"
+              height="256.5"
+              fill="#7F30E3"
+              data-color="violet"
+            />
+            <rect
+              x="0"
+              y="256.5"
+              width="210"
+              height="256.5"
+              fill="#7F30E3"
+              data-color="violet"
+            />
+            <rect
+              x="210"
+              y="256.5"
+              width="210"
+              height="256.5"
+              fill="#ff00ff"
+              data-color="red"
+            />
+          </g>
           <rect
-            x="0"
-            y="0"
-            width="420"
-            height="420"
-            rx="72"
-            ry="72"
+            x="24"
+            y="24"
+            width="374"
+            height="374"
+            rx="110"
+            ry="110"
             fill="#ffffff"
             data-color="white"
           />
 
           <g
             id="logo2Slot"
-            transform="translate(135 42)"
+            transform="translate(135 54)"
             data-preserve-colors="true"
             data-slot-width="150"
             data-slot-height="105"
@@ -593,17 +649,12 @@ border: 1px solid;
             fill="#000000"
           ></text>
 
-          <g id="logoPanel" transform="translate(0 420)">
-            <path
-              d="M 0 0 H 420 V 76 C 420 100.301 400.301 120 376 120 H 44 C 19.699 120 0 100.301 0 76 V 0 Z"
-              fill="#e61a33"
-              data-color="red"
-            />
+          <g id="logoPanel" transform="translate(0 395)">
             <g
               id="logo1Slot"
-              transform="translate(100 24)"
+              transform="translate(90 23)"
               data-logo-color="white"
-              data-slot-width="220"
+              data-slot-width="240"
               data-slot-height="72"
             >
               <rect
@@ -636,11 +687,11 @@ border: 1px solid;
       const { jsPDF } = window.jspdf;
 
       const PAGE_PX = 420;
-      const PAGE_HEIGHT_PX = 540;
+      const PAGE_HEIGHT_PX = 513;
       const PAGE_MM = 148;
       const PAGE_HEIGHT_MM = PAGE_MM * (PAGE_HEIGHT_PX / PAGE_PX);
       const SCALE = PAGE_MM / PAGE_PX;
-      const WHITE_RECT_HEIGHT = 420;
+      const WHITE_RECT_BOTTOM = PAGE_PX * 0.95;
       const WHITE_RECT_BOTTOM_PADDING = 28;
       const PARAGRAPH_LINE_HEIGHT = 12;
       const PARAGRAPH_MAX_WIDTH = 280;
@@ -648,7 +699,8 @@ border: 1px solid;
       const BRAND_COLORS = {
         white: { c: 0, m: 0, y: 0, k: 0 },
         black: { c: 0, m: 0, y: 0, k: 100 },
-        red: { c: 60, m: 71, y: 0, k: 0 },
+        red: { c: 8, m: 90, y: 0, k: 0 },
+        violet: { c: 75, m: 92, y: 0, k: 0 },
       };
 
       const WBSANS_OUTLINE_FONT_URL = "WBSans-Medium.otf";
@@ -819,31 +871,37 @@ border: 1px solid;
         });
       }
 
-      function checkerboardFavicon(rotation) {
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><clipPath id="a"><rect width="64" height="64" rx="14"/></clipPath><g clip-path="url(#a)"><g transform="rotate(${rotation} 32 32)"><rect x="-14" y="-14" width="92" height="92" fill="#ff00ff"/><path fill="rgb(102, 74, 255)" d="M32 -14h46v46H32zM-14 32h46v46h-46z"/></g></g></svg>`;
-
-        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-      }
-
-      function animateFavicon() {
-        const frames = Array.from({ length: 24 }, (_, index) =>
-          checkerboardFavicon(index * 15),
+      function initializeTemplateTilt() {
+        const template = document.querySelector(".sheet-wrap");
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
         );
-        let frame = 0;
+        if (!template || reduceMotion.matches) return;
 
-        setInterval(() => {
-          const previous = document.getElementById("favicon");
-          const favicon = document.createElement("link");
+        let animationFrame = null;
 
-          frame = (frame + 1) % frames.length;
-          favicon.id = "favicon";
-          favicon.rel = "icon";
-          favicon.type = "image/svg+xml";
-          favicon.href = frames[frame];
+        function updateTilt(event) {
+          const bounds = template.getBoundingClientRect();
+          const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+          const y = (event.clientY - bounds.top) / bounds.height - 0.5;
 
-          if (previous) previous.remove();
-          document.head.appendChild(favicon);
-        }, 180);
+          if (animationFrame) window.cancelAnimationFrame(animationFrame);
+
+          animationFrame = window.requestAnimationFrame(() => {
+            template.style.transform = `rotateX(${-y * 15}deg) rotateY(${x * 15}deg) scale(1.012)`;
+            template.style.boxShadow = `${-x * 24}px ${40 - y * 24}px 150px rgba(0, 0, 0, 0.16)`;
+          });
+        }
+
+        function resetTilt() {
+          if (animationFrame) window.cancelAnimationFrame(animationFrame);
+
+          template.style.transform = "";
+          template.style.boxShadow = "";
+        }
+
+        template.addEventListener("pointermove", updateTilt);
+        template.addEventListener("pointerleave", resetTilt);
       }
 
       function forceSvgChildrenToBrandColor(root, colorName) {
@@ -1235,7 +1293,7 @@ border: 1px solid;
           document.getElementById("paragraphInput").value || " ";
         const paragraphEl = document.getElementById("paragraphSvg");
 
-        let y = 234;
+        let y = 240;
 
         const headingLines = wrapSvgText(
           document.getElementById("headingSvg"),
@@ -1263,7 +1321,7 @@ border: 1px solid;
           y,
         );
         const paragraphY =
-          WHITE_RECT_HEIGHT -
+          WHITE_RECT_BOTTOM -
           WHITE_RECT_BOTTOM_PADDING -
           (paragraphLines - 1) * PARAGRAPH_LINE_HEIGHT;
         wrapSvgText(
@@ -2001,6 +2059,10 @@ border: 1px solid;
       }
 
       function getPaintCmyk(el, property) {
+        if (el.dataset.color && BRAND_COLORS[el.dataset.color]) {
+          return BRAND_COLORS[el.dataset.color];
+        }
+
         if (el.closest("[data-preserve-colors]")) {
           const rgb = getRenderedPaintColor(el, property);
           return rgb ? rgbToCmyk(rgb) : BRAND_COLORS.black;
@@ -2168,7 +2230,7 @@ border: 1px solid;
       }
 
       populateTimeSelects();
-      animateFavicon();
+      initializeTemplateTilt();
       applyLanguage(document.getElementById("languageInput").value);
     </script>
   </body>
