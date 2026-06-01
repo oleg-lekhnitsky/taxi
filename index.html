@@ -333,7 +333,7 @@ text-transform: lowercase;
         display: grid;
         place-items: center;
         padding: 40px;
-        background-color: #ffffff;
+        background-color: #f6f6f6;
         background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
         background-size: 24px 24px;
         margin: 12px;
@@ -928,6 +928,10 @@ text-transform: lowercase;
       let interOutlineFont = null;
       let outlineFontLoadPromise = null;
       let currentLanguage = "ru";
+      let savedLogo2SvgText = "";
+      let savedLogo2FileName = "";
+      let editorStateReady = false;
+      const EDITOR_STORAGE_KEY = "wb-taxi-hours-editor-v1";
 
       function setCmykFill(doc, colorName) {
         const color = BRAND_COLORS[colorName] || BRAND_COLORS.black;
@@ -989,6 +993,91 @@ text-transform: lowercase;
 
       function brandHex(name) {
         return rgbHexFromCmyk(BRAND_COLORS[name] || BRAND_COLORS.black);
+      }
+
+      function saveEditorState() {
+        if (!editorStateReady) return;
+
+        try {
+          localStorage.setItem(
+            EDITOR_STORAGE_KEY,
+            JSON.stringify({
+              language: document.getElementById("languageInput").value,
+              startHour: document.getElementById("startHourInput").value,
+              endHour: document.getElementById("endHourInput").value,
+              subheading: document.getElementById("subheadingInput").value,
+              paragraph: document.getElementById("paragraphInput").value,
+              brandName: document.getElementById("brandNameInput").value,
+              sheetColorMode,
+              logo2SvgText: savedLogo2SvgText,
+              logo2FileName: savedLogo2FileName,
+            }),
+          );
+        } catch (error) {
+          console.warn("Could not save editor state", error);
+        }
+      }
+
+      function syncSheetColorModeButtons() {
+        document.querySelectorAll("[data-color-mode]").forEach((item) => {
+          item.setAttribute(
+            "aria-pressed",
+            String(item.dataset.colorMode === sheetColorMode),
+          );
+        });
+      }
+
+      function restoreEditorState() {
+        let state = null;
+
+        try {
+          state = JSON.parse(localStorage.getItem(EDITOR_STORAGE_KEY));
+        } catch (error) {
+          console.warn("Could not restore editor state", error);
+        }
+
+        const language = state && I18N[state.language] ? state.language : "ru";
+        document.getElementById("languageInput").value = language;
+        applyLanguage(language);
+
+        if (state) {
+          document.getElementById("startHourInput").value =
+            state.startHour || "08:00";
+          document.getElementById("endHourInput").value =
+            state.endHour || "20:00";
+          document.getElementById("subheadingInput").value =
+            typeof state.subheading === "string"
+              ? state.subheading
+              : I18N[language].subheadingOptions[0][0];
+          document.getElementById("paragraphInput").value =
+            typeof state.paragraph === "string"
+              ? state.paragraph
+              : LEGAL_DEFAULTS[language];
+          document.getElementById("brandNameInput").value =
+            state.brandName || "";
+          sheetColorMode = ["cmyk", "pantone", "ral"].includes(
+            state.sheetColorMode,
+          )
+            ? state.sheetColorMode
+            : "cmyk";
+          savedLogo2SvgText = state.logo2SvgText || "";
+          savedLogo2FileName = state.logo2FileName || "";
+
+          if (savedLogo2SvgText) {
+            const uploadText = document.getElementById("logo2UploadText");
+            uploadText.textContent = savedLogo2FileName || "logo.svg";
+            uploadText.dataset.hasFile = "true";
+            importSvgIntoSlot(
+              savedLogo2SvgText,
+              document.getElementById("logo2Slot"),
+            );
+          }
+        }
+
+        syncSheetColorModeButtons();
+        updateSheetDimensions();
+        editorStateReady = true;
+        updateTemplate();
       }
 
       function cleanSvgText(svgText) {
@@ -1062,15 +1151,9 @@ text-transform: lowercase;
         document.querySelectorAll("[data-color-mode]").forEach((button) => {
           button.addEventListener("click", () => {
             sheetColorMode = button.dataset.colorMode;
-
-            document.querySelectorAll("[data-color-mode]").forEach((item) => {
-              item.setAttribute(
-                "aria-pressed",
-                String(item.dataset.colorMode === sheetColorMode),
-              );
-            });
-
+            syncSheetColorModeButtons();
             updateSheetDimensions();
+            saveEditorState();
           });
         });
       }
@@ -1189,6 +1272,10 @@ text-transform: lowercase;
           const reader = new FileReader();
 
           reader.onload = (e) => {
+            if (slotId === "logo2Slot") {
+              savedLogo2SvgText = e.target.result;
+              savedLogo2FileName = file.name;
+            }
             importSvgIntoSlot(e.target.result, slot);
           };
 
@@ -1593,6 +1680,7 @@ text-transform: lowercase;
         );
 
         applySemanticPreviewColors(document.getElementById("templateSvg"));
+        saveEditorState();
       }
 
       function getWorkingHoursHeading() {
@@ -2509,10 +2597,9 @@ text-transform: lowercase;
       }
 
       populateTimeSelects();
-      updateSheetDimensions();
       initializeSheetColorMode();
       initializeTemplateTilt();
-      applyLanguage(document.getElementById("languageInput").value);
+      restoreEditorState();
     </script>
   </body>
 </html>

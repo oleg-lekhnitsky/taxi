@@ -1,0 +1,1245 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WB Taxi — Файлы для печати</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3CclipPath id='a'%3E%3Crect width='64' height='64' rx='14'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Crect width='64' height='64' fill='%23ff00ff'/%3E%3Cpath fill='%237F30E3' d='M32 0h32v32H32zM0 32h32v32H0z'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.7.0/dist/svg2pdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+    <style>
+      @import url("https://rsms.me/inter/inter.css");
+
+      @font-face {
+        font-family: "WBSans";
+        src: url("WBSans-Medium.otf") format("opentype");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      ::selection {
+        background: #ff00ff;
+        color: #ffffff;
+      }
+
+      body {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        min-height: 100vh;
+        margin: 0;
+        background: #f0f0f0;
+        color: #18181b;
+        font-family: "InterVariable", "Inter", Helvetica, Arial, sans-serif;
+      }
+
+      h2{
+        margin: 0;
+        padding: 0%;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #18181b;
+        font: inherit;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: #7f30e3;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 12px;
+        display: flex;
+        flex-direction: column;
+        height: fit-content;
+        margin: 12px;
+        margin-right: 0;
+        padding: 24px;
+        border-radius: 24px;
+        background: #ffffff;
+        font-family: "InterVariable", "Inter", Helvetica, Arial, sans-serif;
+      }
+
+      .brand {
+        margin: 0 0 8px;
+        color: #000000;
+        font-family: "WBSans", Helvetica, Arial, sans-serif;
+        font-size: 32px;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .sidebar-intro {
+        margin: 0 0 28px;
+        color: #71717a;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .file-list {
+        display: grid;
+        gap: 20px;
+      }
+
+      .file-list-group {
+        display: grid;
+      }
+
+      .file-list-group-title {
+        display: block;
+        margin: 0 0 8px;
+        color: #18181b;
+        font-size: 12px;
+        font-weight: inherit;
+        line-height: 1.2;
+      }
+
+      .file-list-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .file-button {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;
+        min-width: 0;
+        padding: 8px;
+        border: 1px solid #e4e4e7;
+        border-radius: 16px;
+        background: #fafafa;
+        cursor: pointer;
+        overflow: hidden;
+        transition:
+          border-color 140ms ease,
+          background 140ms ease,
+          transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .file-button:hover {
+        border-color: #a1a1aa;
+        transform: translateY(-2px);
+      }
+
+      .file-button[aria-pressed="true"] {
+        border-color: #7f30e3;
+        background: #f4f4f5;
+      }
+
+      .add-label-button {
+        position: relative;
+        color: #7f30e3;
+        font-size: 40px;
+        font-weight: 300;
+        line-height: 1;
+      }
+
+      .add-label-symbol {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        line-height: 1;
+        transform: translate(-50%, -56%);
+      }
+
+      .file-thumbnail {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .preview-gloss {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(
+          circle at var(--gloss-x, 50%) var(--gloss-y, 50%),
+          rgba(255, 255, 255, 0.46) 0,
+          rgba(255, 255, 255, 0.14) 28%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        mix-blend-mode: screen;
+        transition: opacity 260ms ease;
+      }
+
+      .preview-item:hover .preview-gloss {
+        opacity: 0.72;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .preview-item {
+          transition: none;
+        }
+
+        .preview-gloss {
+          display: none;
+        }
+      }
+
+
+
+      .download-button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 16px;
+        border: 0;
+        border-radius: 24px;
+        background: #18181b;
+        color: #ffffff;
+        cursor: pointer;
+        font-family: "WBSans", Helvetica, Arial, sans-serif;
+        font-size: 24px;
+        font-weight: 500;
+        line-height: 1;
+        text-transform: lowercase;
+        transition: all 400ms ease;
+      }
+
+      .download-button:hover {
+        background: #7f30e3;
+        transition: all 0.05ms;
+      }
+
+      .download-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      }
+
+      .download-button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.14);
+      }
+
+      .download-button:disabled {
+        cursor: wait;
+        opacity: 0.64;
+      }
+
+      .select-all-button {
+        width: fit-content;
+        margin: 0 0 20px;
+        padding: 7px 10px;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #18181b;
+        cursor: pointer;
+        font-family: "InterVariable", "Inter", Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        line-height: 18px;
+        text-transform: lowercase;
+      }
+
+      .select-all-button:hover {
+        border-color: #18181b;
+        background: #f4f4f5;
+      }
+
+      .custom-label-field {
+        display: none;
+        margin-top: 16px;
+      }
+
+      .custom-label-field.is-visible {
+        display: grid;
+        gap: 8px;
+      }
+
+      .custom-label-input {
+        border-radius: 12px;
+        text-transform: lowercase;
+      }
+
+      .stage {
+        position: relative;
+        min-width: 0;
+        margin: 12px;
+        padding: 24px;
+        padding-bottom: 48px;
+        border-radius: 24px;
+        background-color: #f6f6f6;
+        background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .preview-groups {
+        display: grid;
+      }
+
+      .preview-grid {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .preview-item {
+        position: relative;
+        display: flex;
+        place-items: center;
+        width: 120px;
+        height: 120px;
+        min-width: 0;
+        overflow: visible;
+        transform-style: preserve-3d;
+        will-change: transform;
+        transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .preview-item.is-custom-label .preview {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        object-fit: contain;
+      }
+
+      .preview {
+        display: block;
+        max-width: 100%;
+        max-height: min(56vh, 520px);
+        border: 0;
+        transition: filter 260ms ease;
+      }
+
+      .preview-item:hover .preview {
+        filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.1));
+      }
+
+      .stage-meta {
+        position: absolute;
+        left: 20px;
+        bottom: 20px;
+        margin: 0;
+        color: #71717a;
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          display: block;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          margin: 12px;
+        }
+
+        .download-button {
+          margin-top: 20px;
+        }
+
+        .stage {
+          min-height: 620px;
+          padding-inline: 20px;
+        }
+
+        .preview {
+          max-width: 78vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <h1 class="brand">Навигация</h1>
+      <p class="sidebar-intro">
+        Выберите нужные указатели и скачайте готовый файл для печати
+      </p>
+      <button class="select-all-button" id="selectAllAction" type="button">
+        Выбрать всё
+      </button>
+      <div class="file-list" id="fileList" aria-label="Файлы для печати"></div>
+      <div class="custom-label-field" id="customLabelField"></div>
+      <button class="download-button" id="downloadAction" type="button">
+        Скачать
+      </button>
+    </aside>
+
+    <main class="stage">
+      <div class="preview-groups" id="previewGroups"></div>
+      <p class="stage-meta" id="stageMeta"></p>
+    </main>
+
+    <script src="printable-svg/manifest.js"></script>
+    <script>
+      const { jsPDF } = window.jspdf;
+      const generatedFiles = [
+
+        {
+          id: "custom-label",
+          title: "Текстовая этикетка",
+          dimensions: "200 × 200 mm",
+          widthMm: 200,
+          heightMm: 200,
+          type: "custom-label",
+          group: "labels",
+          text: "введите текст",
+        },
+      ];
+      const files = [...(window.PRINTABLE_SVGS || []), ...generatedFiles];
+      const selectedFiles = new Set();
+      let customLabelSequence = 1;
+      let wbSansOutlineFont = null;
+      const wbSansOutlineFontPromise = loadWbSansOutlineFont();
+      const PRINTABLES_STORAGE_KEY = "wb-taxi-printables-v1";
+      const CUSTOM_LABEL_SVG_HEIGHT = 300;
+      const CUSTOM_LABEL_FONT_SIZE = 172;
+      const CUSTOM_LABEL_TEXT_BOX_HEIGHT = 220;
+      const groupTitles = {
+        printables: "Готовые файлы",
+        arrows: "Стрелки",
+        icons: "Иконки",
+        labels: "Текстовые указатели",
+      };
+
+      function fileId(file) {
+        return file.id || file.file;
+      }
+
+      function savePrintableState() {
+        const customLabels = files
+          .filter((file) => file.type === "custom-label")
+          .map((file) => ({
+            id: file.id,
+            title: file.title,
+            text: file.text,
+          }));
+
+        try {
+          localStorage.setItem(
+            PRINTABLES_STORAGE_KEY,
+            JSON.stringify({
+              customLabels,
+              selectedIds: [...selectedFiles].map(fileId),
+            }),
+          );
+        } catch (error) {
+          console.warn("Could not save printable state", error);
+        }
+      }
+
+      function restorePrintableState() {
+        let state = null;
+
+        try {
+          state = JSON.parse(localStorage.getItem(PRINTABLES_STORAGE_KEY));
+        } catch (error) {
+          console.warn("Could not restore printable state", error);
+        }
+
+        if (state && Array.isArray(state.customLabels)) {
+          for (let index = files.length - 1; index >= 0; index -= 1) {
+            if (files[index].type === "custom-label") files.splice(index, 1);
+          }
+          state.customLabels.forEach((label, index) => {
+            const sequence = index + 1;
+            files.push({
+              id: label.id || `custom-label-${sequence}`,
+              title: label.title || `Текстовая этикетка ${sequence}`,
+              dimensions: "200 × 200 mm",
+              widthMm: 200,
+              heightMm: 200,
+              type: "custom-label",
+              group: "labels",
+              text: label.text || "введите текст",
+            });
+          });
+          customLabelSequence = Math.max(
+            1,
+            ...state.customLabels.map((label) => {
+              const match = (label.id || "").match(/^custom-label-(\d+)$/);
+              return match ? Number(match[1]) : 1;
+            }),
+          );
+        }
+
+        const selectedIds =
+          state && Array.isArray(state.selectedIds) ? new Set(state.selectedIds) : null;
+        files.forEach((file) => {
+          if (selectedIds ? selectedIds.has(fileId(file)) : file === files[0]) {
+            selectedFiles.add(file);
+          }
+        });
+      }
+
+      function fileUrl(file) {
+        return `printable-svg/${encodeURIComponent(file.file)}`;
+      }
+
+      function escapeXml(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+      }
+
+      async function loadWbSansOutlineFont() {
+        try {
+          const response = await fetch("WBSans-Medium.otf");
+          if (!response.ok) throw new Error("WBSans-Medium.otf could not be loaded");
+          wbSansOutlineFont = opentype.parse(await response.arrayBuffer());
+          renderFileList();
+          renderStage();
+        } catch (error) {
+          console.warn(error);
+          wbSansOutlineFont = null;
+        }
+      }
+
+      function measureWbSansText(text, fontSize) {
+        if (wbSansOutlineFont) {
+          return wbSansOutlineFont.getAdvanceWidth(text, fontSize, {
+            kerning: true,
+          });
+        }
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) return text.length * fontSize * 0.62;
+        context.font = `600 ${fontSize}px WBSans, Helvetica, Arial, sans-serif`;
+        return context.measureText(text).width;
+      }
+
+      function customLabelMetrics(file) {
+        const text = (file.text.trim() || "введите текст").toLowerCase();
+        const svgHeight = CUSTOM_LABEL_SVG_HEIGHT;
+        const heightMm = 200;
+        const textWidth = measureWbSansText(text, CUSTOM_LABEL_FONT_SIZE);
+
+        const svgWidth = Math.max(svgHeight, Math.ceil(textWidth + 160));
+        const widthMm = Math.ceil((svgWidth / svgHeight) * heightMm);
+        file.widthMm = widthMm;
+        file.heightMm = heightMm;
+        file.dimensions = `${widthMm} × ${heightMm} mm`;
+
+        return { svgHeight, svgWidth, text };
+      }
+
+      function customLabelBaselineY() {
+        const textBoxTop =
+          (CUSTOM_LABEL_SVG_HEIGHT - CUSTOM_LABEL_TEXT_BOX_HEIGHT) / 2;
+        const textBoxCenter = textBoxTop + CUSTOM_LABEL_TEXT_BOX_HEIGHT / 2;
+
+        if (!wbSansOutlineFont) return 205;
+
+        const fontScale = CUSTOM_LABEL_FONT_SIZE / wbSansOutlineFont.unitsPerEm;
+        return (
+          textBoxCenter +
+          ((wbSansOutlineFont.ascender + wbSansOutlineFont.descender) *
+            fontScale) /
+            2
+        );
+      }
+
+      function customLabelTextMarkup(text, svgWidth) {
+        const baselineY = customLabelBaselineY();
+
+        if (wbSansOutlineFont) {
+          const fontSize = CUSTOM_LABEL_FONT_SIZE;
+          const textWidth = wbSansOutlineFont.getAdvanceWidth(text, fontSize, {
+            kerning: true,
+          });
+          const path = wbSansOutlineFont.getPath(
+            text,
+            (svgWidth - textWidth) / 2,
+            baselineY,
+            fontSize,
+            { kerning: true },
+          );
+
+          return `<path d="${opentypePathToSvgD(path)}" fill="black"/>`;
+        }
+
+        return `<text x="${svgWidth / 2}" y="${baselineY}" text-anchor="middle" font-family="WBSans, Helvetica, Arial, sans-serif" font-size="${CUSTOM_LABEL_FONT_SIZE}" font-weight="600" fill="black">${escapeXml(text)}</text>`;
+      }
+
+      function generatedSvg(file) {
+        if (file.type === "arrows") {
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 400"><rect width="740" height="400" rx="48" fill="#fff"/><g fill="none" stroke="#18181b" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"><path d="M82 110h186"/><path d="m208 50 60 60-60 60"/><path d="M658 290H472"/><path d="m532 230-60 60 60 60"/><path d="M322 310V104"/><path d="m262 164 60-60 60 60"/></g></svg>`;
+        }
+
+        if (file.type === "icons") {
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 400"><rect width="740" height="400" rx="48" fill="#fff"/><g fill="none" stroke="#18181b" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><circle cx="160" cy="200" r="82"/><path d="M124 200h72M160 164v72"/><rect x="288" y="118" width="164" height="164" rx="34"/><path d="M324 200h92"/><path d="m562 118 92 52v104l-92 52-92-52V170z"/><path d="M562 164v72"/></g></svg>`;
+        }
+
+        const { svgHeight, svgWidth, text } = customLabelMetrics(file);
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}"><rect width="${svgWidth}" height="${svgHeight}" rx="78" fill="#fff"/>${customLabelTextMarkup(text, svgWidth)}</svg>`;
+      }
+
+      function svgText(file) {
+        return file.type ? generatedSvg(file) : null;
+      }
+
+      function previewUrl(file) {
+        const generated = svgText(file);
+        return generated
+          ? `data:image/svg+xml,${encodeURIComponent(generated)}`
+          : fileUrl(file);
+      }
+
+      function toggleFile(file) {
+        if (selectedFiles.has(file)) {
+          selectedFiles.delete(file);
+        } else {
+          selectedFiles.add(file);
+        }
+
+        savePrintableState();
+        renderFileList();
+        renderStage();
+        updateCustomLabelField();
+      }
+
+      function updateSelectAllAction() {
+        const button = document.getElementById("selectAllAction");
+        const allSelected =
+          files.length > 0 && files.every((file) => selectedFiles.has(file));
+        button.textContent = allSelected ? "Снять выбор" : "Выбрать всё";
+      }
+
+      function toggleSelectAll() {
+        const allSelected =
+          files.length > 0 && files.every((file) => selectedFiles.has(file));
+
+        if (allSelected) {
+          selectedFiles.clear();
+        } else {
+          files.forEach((file) => selectedFiles.add(file));
+        }
+
+        savePrintableState();
+        renderFileList();
+        renderStage();
+        updateCustomLabelField();
+      }
+
+      function appendPreviewGloss(item) {
+        const gloss = document.createElement("span");
+        gloss.className = "preview-gloss";
+        gloss.setAttribute("aria-hidden", "true");
+        item.appendChild(gloss);
+      }
+
+      function initializePreviewTilt() {
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        );
+        if (reduceMotion.matches) return;
+
+        document.querySelectorAll(".preview-item").forEach((item) => {
+          let animationFrame = null;
+
+          item.addEventListener("pointermove", (event) => {
+            const bounds = item.getBoundingClientRect();
+            const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+            const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+            const gloss = item.querySelector(".preview-gloss");
+
+            if (animationFrame) window.cancelAnimationFrame(animationFrame);
+            animationFrame = window.requestAnimationFrame(() => {
+              item.style.transform = `rotateX(${-y * 28}deg) rotateY(${x * 28}deg) scale(1.025)`;
+              if (gloss) {
+                gloss.style.setProperty("--gloss-x", `${(1 - x) * 100}%`);
+                gloss.style.setProperty("--gloss-y", `${(1 - y) * 100}%`);
+              }
+            });
+          });
+
+          item.addEventListener("pointerleave", () => {
+            const gloss = item.querySelector(".preview-gloss");
+            if (animationFrame) window.cancelAnimationFrame(animationFrame);
+            item.style.transform = "";
+            if (gloss) {
+              gloss.style.removeProperty("--gloss-x");
+              gloss.style.removeProperty("--gloss-y");
+            }
+          });
+        });
+      }
+
+      function addCustomLabel() {
+        customLabelSequence += 1;
+        const file = {
+          id: `custom-label-${customLabelSequence}`,
+          title: `Текстовая этикетка ${customLabelSequence}`,
+          dimensions: "200 × 200 mm",
+          widthMm: 200,
+          heightMm: 200,
+          type: "custom-label",
+          group: "labels",
+          text: "оформление",
+        };
+
+        files.push(file);
+        selectedFiles.add(file);
+        savePrintableState();
+        renderFileList();
+        renderStage();
+        updateCustomLabelField();
+      }
+
+      function renderStage() {
+        const groupsRoot = document.getElementById("previewGroups");
+        const selected = [...selectedFiles];
+        const grid = document.createElement("div");
+        groupsRoot.textContent = "";
+        grid.className = "preview-grid";
+
+        selected.forEach((file) => {
+          const item = document.createElement("div");
+          const preview = document.createElement("img");
+
+          item.className = "preview-item";
+          preview.className = "preview";
+          preview.src = previewUrl(file);
+          preview.alt = file.title || file.file;
+          if (file.type === "custom-label") {
+            item.classList.add("is-custom-label");
+            item.style.width = `${120 * (file.widthMm / file.heightMm)}px`;
+          }
+          item.appendChild(preview);
+          appendPreviewGloss(item);
+          grid.appendChild(item);
+        });
+        groupsRoot.appendChild(grid);
+
+        initializePreviewTilt();
+        updateSelectAllAction();
+        const selectedDimensions = [
+          ...new Set(
+            selected.map(
+              (file) =>
+                file.dimensions || `${file.widthMm} × ${file.heightMm} mm`,
+            ),
+          ),
+        ];
+        document.getElementById("stageMeta").textContent =
+          selected.length === 0
+            ? "Выбрано файлов: 0"
+            : selected.length === 1
+            ? selectedDimensions[0]
+            : `Выбрано файлов: ${selected.length} · Размеры: ${selectedDimensions.join(", ")}`;
+        document.getElementById("downloadAction").disabled = !selected.length;
+      }
+
+      function renderFileList() {
+        const list = document.getElementById("fileList");
+        const groups = new Map();
+        list.textContent = "";
+
+        files.forEach((file) => {
+          const groupName = file.group || "printables";
+          if (!groups.has(groupName)) groups.set(groupName, []);
+          groups.get(groupName).push(file);
+        });
+
+        groups.forEach((groupFiles, groupName) => {
+          const section = document.createElement("section");
+          const heading = document.createElement("h2");
+          const grid = document.createElement("div");
+
+          section.className = "file-list-group";
+          heading.className = "file-list-group-title";
+          heading.textContent = groupTitles[groupName] || groupName;
+          grid.className = "file-list-grid";
+
+          groupFiles.forEach((file) => {
+            const button = document.createElement("button");
+            const thumbnail = document.createElement("img");
+
+            button.className = "file-button";
+            button.type = "button";
+            button.title = file.title || file.file;
+            button.setAttribute("aria-label", file.title || file.file);
+            button.setAttribute("aria-pressed", String(selectedFiles.has(file)));
+            button.addEventListener("click", () => toggleFile(file));
+            thumbnail.className = "file-thumbnail";
+            thumbnail.src = previewUrl(file);
+            thumbnail.alt = "";
+            button.appendChild(thumbnail);
+            grid.appendChild(button);
+          });
+
+          if (groupName === "labels") {
+            const addButton = document.createElement("button");
+            const addSymbol = document.createElement("span");
+            addButton.className = "file-button add-label-button";
+            addButton.type = "button";
+            addButton.title = "Добавить этикетку";
+            addButton.setAttribute("aria-label", "Добавить этикетку");
+            addButton.addEventListener("click", addCustomLabel);
+            addSymbol.className = "add-label-symbol";
+            addSymbol.textContent = "+";
+            addButton.appendChild(addSymbol);
+            grid.appendChild(addButton);
+          }
+
+          section.append(heading, grid);
+          list.appendChild(section);
+        });
+      }
+
+      function updateCustomLabelField() {
+        const field = document.getElementById("customLabelField");
+        const selectedLabels = files.filter(
+          (file) => file.type === "custom-label" && selectedFiles.has(file),
+        );
+
+        field.textContent = "";
+        field.classList.toggle("is-visible", selectedLabels.length > 0);
+
+        selectedLabels.forEach((file) => {
+          const input = document.createElement("input");
+          input.className = "custom-label-input";
+          input.value = file.text;
+          input.setAttribute("aria-label", file.title);
+          input.addEventListener("input", () => {
+            file.text = input.value;
+            savePrintableState();
+            renderFileList();
+            renderStage();
+          });
+          field.appendChild(input);
+        });
+      }
+
+      const PRINT_CMYK_COLORS = {
+        white: { c: 0, m: 0, y: 0, k: 0 },
+        black: { c: 0, m: 0, y: 0, k: 100 },
+        pink: { c: 8, m: 90, y: 0, k: 0 },
+        purple: { c: 75, m: 92, y: 0, k: 0 },
+      };
+
+      function setCmykFill(doc, color) {
+        doc.setFillColor(
+          String(color.c / 100),
+          String(color.m / 100),
+          String(color.y / 100),
+          String(color.k / 100),
+        );
+      }
+
+      function setCmykStroke(doc, color) {
+        doc.setDrawColor(
+          String(color.c / 100),
+          String(color.m / 100),
+          String(color.y / 100),
+          String(color.k / 100),
+        );
+      }
+
+      function rgbToCmyk({ r, g, b }) {
+        const rRatio = r / 255;
+        const gRatio = g / 255;
+        const bRatio = b / 255;
+        const kRatio = 1 - Math.max(rRatio, gRatio, bRatio);
+
+        if (kRatio >= 1) return PRINT_CMYK_COLORS.black;
+
+        return {
+          c: ((1 - rRatio - kRatio) / (1 - kRatio)) * 100,
+          m: ((1 - gRatio - kRatio) / (1 - kRatio)) * 100,
+          y: ((1 - bRatio - kRatio) / (1 - kRatio)) * 100,
+          k: kRatio * 100,
+        };
+      }
+
+      function printColor(value) {
+        const normalized = (value || "").trim().toLowerCase();
+        if (normalized === "#ff00ff") return PRINT_CMYK_COLORS.pink;
+        if (normalized === "#7f30e3") return PRINT_CMYK_COLORS.purple;
+        if (normalized === "white" || normalized === "#fff" || normalized === "#ffffff")
+          return PRINT_CMYK_COLORS.white;
+        if (normalized === "black" || normalized === "#000" || normalized === "#000000")
+          return PRINT_CMYK_COLORS.black;
+
+        const hex = normalized.match(/^#([0-9a-f]{6})$/);
+        if (hex) {
+          return rgbToCmyk({
+            r: parseInt(hex[1].slice(0, 2), 16),
+            g: parseInt(hex[1].slice(2, 4), 16),
+            b: parseInt(hex[1].slice(4, 6), 16),
+          });
+        }
+
+        return PRINT_CMYK_COLORS.black;
+      }
+
+      function opentypePathToSvgD(path) {
+        return path.commands
+          .map((command) => {
+            if (command.type === "M") return `M ${command.x} ${command.y}`;
+            if (command.type === "L") return `L ${command.x} ${command.y}`;
+            if (command.type === "C")
+              return `C ${command.x1} ${command.y1} ${command.x2} ${command.y2} ${command.x} ${command.y}`;
+            if (command.type === "Q")
+              return `Q ${command.x1} ${command.y1} ${command.x} ${command.y}`;
+            if (command.type === "Z") return "Z";
+            return "";
+          })
+          .join(" ");
+      }
+
+      function outlineCustomLabelText(svg) {
+        const text = svg.querySelector("text");
+        if (!text) return;
+        if (!wbSansOutlineFont) {
+          throw new Error("WBSans outline font is not loaded");
+        }
+
+        const value = text.textContent || " ";
+        const fontSize = parseFloat(text.getAttribute("font-size")) || 72;
+        const centerX = parseFloat(text.getAttribute("x")) || 0;
+        const y = parseFloat(text.getAttribute("y")) || 0;
+        const width = wbSansOutlineFont.getAdvanceWidth(value, fontSize, {
+          kerning: true,
+        });
+        const path = wbSansOutlineFont.getPath(value, centerX - width / 2, y, fontSize, {
+          kerning: true,
+        });
+        const pathElement = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path",
+        );
+
+        pathElement.setAttribute("d", opentypePathToSvgD(path));
+        pathElement.setAttribute("fill", text.getAttribute("fill") || "#18181b");
+        text.replaceWith(pathElement);
+      }
+
+      function svgPathLines(d, scaleX, scaleY) {
+        const tokens =
+          d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g) || [];
+        const lines = [];
+        let index = 0;
+        let command = "";
+        let x = 0;
+        let y = 0;
+        let startX = 0;
+        let startY = 0;
+
+        function isCommand(token) {
+          return /^[a-zA-Z]$/.test(token);
+        }
+
+        function number() {
+          return parseFloat(tokens[index++]);
+        }
+
+        function move(nextX, nextY) {
+          x = nextX;
+          y = nextY;
+          startX = x;
+          startY = y;
+          lines.push({ op: "m", c: [x * scaleX, y * scaleY] });
+        }
+
+        function line(nextX, nextY) {
+          x = nextX;
+          y = nextY;
+          lines.push({ op: "l", c: [x * scaleX, y * scaleY] });
+        }
+
+        function curve(x1, y1, x2, y2, nextX, nextY) {
+          x = nextX;
+          y = nextY;
+          lines.push({
+            op: "c",
+            c: [
+              x1 * scaleX,
+              y1 * scaleY,
+              x2 * scaleX,
+              y2 * scaleY,
+              x * scaleX,
+              y * scaleY,
+            ],
+          });
+        }
+
+        function quadratic(controlX, controlY, nextX, nextY) {
+          curve(
+            x + (2 / 3) * (controlX - x),
+            y + (2 / 3) * (controlY - y),
+            nextX + (2 / 3) * (controlX - nextX),
+            nextY + (2 / 3) * (controlY - nextY),
+            nextX,
+            nextY,
+          );
+        }
+
+        while (index < tokens.length) {
+          if (isCommand(tokens[index])) command = tokens[index++];
+          const relative = command === command.toLowerCase();
+
+          if (command.toUpperCase() === "M") {
+            const nextX = number();
+            const nextY = number();
+            move(relative ? x + nextX : nextX, relative ? y + nextY : nextY);
+            command = relative ? "l" : "L";
+          } else if (command.toUpperCase() === "L") {
+            const nextX = number();
+            const nextY = number();
+            line(relative ? x + nextX : nextX, relative ? y + nextY : nextY);
+          } else if (command.toUpperCase() === "H") {
+            const nextX = number();
+            line(relative ? x + nextX : nextX, y);
+          } else if (command.toUpperCase() === "V") {
+            const nextY = number();
+            line(x, relative ? y + nextY : nextY);
+          } else if (command.toUpperCase() === "C") {
+            let x1 = number();
+            let y1 = number();
+            let x2 = number();
+            let y2 = number();
+            let nextX = number();
+            let nextY = number();
+            if (relative) {
+              x1 += x;
+              y1 += y;
+              x2 += x;
+              y2 += y;
+              nextX += x;
+              nextY += y;
+            }
+            curve(x1, y1, x2, y2, nextX, nextY);
+          } else if (command.toUpperCase() === "Q") {
+            let controlX = number();
+            let controlY = number();
+            let nextX = number();
+            let nextY = number();
+            if (relative) {
+              controlX += x;
+              controlY += y;
+              nextX += x;
+              nextY += y;
+            }
+            quadratic(controlX, controlY, nextX, nextY);
+          } else if (command.toUpperCase() === "Z") {
+            lines.push({ op: "h", c: [] });
+            x = startX;
+            y = startY;
+            command = "";
+          } else {
+            throw new Error(`Unsupported SVG path command: ${command}`);
+          }
+        }
+
+        return lines;
+      }
+
+      function transformSvgPoint(element, x, y) {
+        const transform = element.getAttribute("transform");
+        if (!transform) return { x, y };
+
+        const matrix = transform.match(
+          /^matrix\(\s*([-+.\deE]+)[ ,]+([-+.\deE]+)[ ,]+([-+.\deE]+)[ ,]+([-+.\deE]+)[ ,]+([-+.\deE]+)[ ,]+([-+.\deE]+)\s*\)$/,
+        );
+        if (matrix) {
+          const [, a, b, c, d, e, f] = matrix.map(Number);
+          return {
+            x: a * x + c * y + e,
+            y: b * x + d * y + f,
+          };
+        }
+
+        const rotate = transform.match(
+          /^rotate\(\s*([-+.\deE]+)(?:[ ,]+([-+.\deE]+)[ ,]+([-+.\deE]+))?\s*\)$/,
+        );
+        if (rotate) {
+          const angle = (Number(rotate[1]) * Math.PI) / 180;
+          const centerX = Number(rotate[2]) || 0;
+          const centerY = Number(rotate[3]) || 0;
+          const offsetX = x - centerX;
+          const offsetY = y - centerY;
+          return {
+            x: centerX + offsetX * Math.cos(angle) - offsetY * Math.sin(angle),
+            y: centerY + offsetX * Math.sin(angle) + offsetY * Math.cos(angle),
+          };
+        }
+
+        throw new Error(`Unsupported SVG transform: ${transform}`);
+      }
+
+      function roundedRectLines(element, scaleX, scaleY) {
+        const x = parseFloat(element.getAttribute("x")) || 0;
+        const y = parseFloat(element.getAttribute("y")) || 0;
+        const width = parseFloat(element.getAttribute("width")) || 0;
+        const height = parseFloat(element.getAttribute("height")) || 0;
+        const rx = Math.min(parseFloat(element.getAttribute("rx")) || 0, width / 2);
+        const ry = Math.min(parseFloat(element.getAttribute("ry")) || rx, height / 2);
+        const k = 0.5522847498;
+        const p = (px, py) => {
+          const point = transformSvgPoint(element, px, py);
+          return [point.x * scaleX, point.y * scaleY];
+        };
+        const lines = [];
+        const move = (px, py) => lines.push({ op: "m", c: p(px, py) });
+        const line = (px, py) => lines.push({ op: "l", c: p(px, py) });
+        const curve = (x1, y1, x2, y2, px, py) =>
+          lines.push({ op: "c", c: [...p(x1, y1), ...p(x2, y2), ...p(px, py)] });
+
+        move(x + rx, y);
+        line(x + width - rx, y);
+        curve(x + width - rx + rx * k, y, x + width, y + ry - ry * k, x + width, y + ry);
+        line(x + width, y + height - ry);
+        curve(x + width, y + height - ry + ry * k, x + width - rx + rx * k, y + height, x + width - rx, y + height);
+        line(x + rx, y + height);
+        curve(x + rx - rx * k, y + height, x, y + height - ry + ry * k, x, y + height - ry);
+        line(x, y + ry);
+        curve(x, y + ry - ry * k, x + rx - rx * k, y, x + rx, y);
+        lines.push({ op: "h", c: [] });
+        return lines;
+      }
+
+      function drawPrintableSvgAsCmyk(doc, svg, file) {
+        const viewBox = (svg.getAttribute("viewBox") || "0 0 200 200")
+          .split(/\s+/)
+          .map(Number);
+        const scaleX = file.widthMm / viewBox[2];
+        const scaleY = file.heightMm / viewBox[3];
+
+        svg.querySelectorAll("rect, path").forEach((element) => {
+          const tag = element.tagName.toLowerCase();
+          const lines =
+            tag === "rect"
+              ? roundedRectLines(element, scaleX, scaleY)
+              : svgPathLines(element.getAttribute("d") || "", scaleX, scaleY);
+          const fill = element.getAttribute("fill");
+          const stroke = element.getAttribute("stroke");
+
+          if (fill && fill !== "none") {
+            setCmykFill(doc, printColor(fill));
+            doc.path(lines);
+            doc.fill();
+          }
+
+          if (stroke && stroke !== "none") {
+            setCmykStroke(doc, printColor(stroke));
+            doc.setLineWidth(
+              (parseFloat(element.getAttribute("stroke-width")) || 1) *
+                ((scaleX + scaleY) / 2),
+            );
+            doc.setLineCap(element.getAttribute("stroke-linecap") || "butt");
+            doc.path(lines);
+            doc.stroke();
+          }
+        });
+
+        svg.querySelectorAll("text").forEach((element) => {
+          setCmykFill(doc, printColor(element.getAttribute("fill")));
+          doc.setFont("helvetica", element.getAttribute("font-weight") === "700" ? "bold" : "normal");
+          doc.setFontSize((parseFloat(element.getAttribute("font-size")) || 16) * scaleY * 2.83465);
+          doc.text(element.textContent, parseFloat(element.getAttribute("x")) * scaleX, parseFloat(element.getAttribute("y")) * scaleY, {
+            align: element.getAttribute("text-anchor") === "middle" ? "center" : "left",
+          });
+        });
+      }
+
+      async function downloadPdf(printableFiles, button, idleLabel) {
+        if (!printableFiles.length) return;
+        await wbSansOutlineFontPromise;
+        printableFiles.forEach((file) => {
+          if (file.type === "custom-label") customLabelMetrics(file);
+        });
+
+        button.disabled = true;
+        button.textContent = "Подготовка PDF…";
+
+        try {
+          const first = printableFiles[0];
+          const doc = new jsPDF({
+            orientation: first.widthMm > first.heightMm ? "landscape" : "portrait",
+            unit: "mm",
+            format: [first.widthMm, first.heightMm],
+            compress: true,
+          });
+
+          for (let index = 0; index < printableFiles.length; index += 1) {
+            const file = printableFiles[index];
+            if (index > 0) {
+              doc.addPage(
+                [file.widthMm, file.heightMm],
+                file.widthMm > file.heightMm ? "landscape" : "portrait",
+              );
+            }
+
+            let source = svgText(file);
+            if (!source) {
+              const response = await fetch(fileUrl(file));
+              if (!response.ok) throw new Error("SVG could not be loaded");
+              source = await response.text();
+            }
+
+            const svg = new DOMParser()
+              .parseFromString(source, "image/svg+xml")
+              .querySelector("svg");
+            if (!svg) throw new Error("SVG could not be parsed");
+            if (file.type === "custom-label") outlineCustomLabelText(svg);
+
+            drawPrintableSvgAsCmyk(doc, svg, file);
+          }
+
+          doc.save(printableFiles.length === 1 ? "printable.pdf" : "printables.pdf");
+        } catch (error) {
+          console.error(error);
+          alert("Не удалось подготовить PDF. Откройте страницу через локальный сервер.");
+        } finally {
+          button.disabled = false;
+          button.textContent = idleLabel;
+        }
+      }
+
+      function downloadSelectedPdf() {
+        return downloadPdf(
+          [...selectedFiles],
+          document.getElementById("downloadAction"),
+          "Скачать",
+        );
+      }
+
+      document
+        .getElementById("downloadAction")
+        .addEventListener("click", downloadSelectedPdf);
+      document
+        .getElementById("selectAllAction")
+        .addEventListener("click", toggleSelectAll);
+      restorePrintableState();
+      renderFileList();
+      renderStage();
+      updateCustomLabelField();
+    </script>
+  </body>
+</html>
