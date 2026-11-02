@@ -761,7 +761,7 @@ text-transform: lowercase;
               y="0"
               width="210"
               height="256.5"
-              fill="#7F30E3"
+              fill="#661AFF"
               data-color="purple"
             />
             <rect
@@ -769,7 +769,7 @@ text-transform: lowercase;
               y="256.5"
               width="210"
               height="256.5"
-              fill="#7F30E3"
+              fill="#661AFF"
               data-color="purple"
             />
             <rect
@@ -1155,6 +1155,7 @@ text-transform: lowercase;
       }
 
       function brandHex(name) {
+        if (name === "purple") return "#661AFF";
         return rgbHexFromCmyk(BRAND_COLORS[name] || BRAND_COLORS.black);
       }
 
@@ -1308,7 +1309,7 @@ text-transform: lowercase;
 
           row.className = "sheet-color";
           swatch.className = "sheet-color-swatch";
-          swatch.style.background = rgbHexFromCmyk(color);
+          swatch.style.background = brandHex(name);
           label.textContent =
             sheetColorMode === "cmyk"
               ? `${name}: C${color.c} M${color.m} Y${color.y} K${color.k}`
