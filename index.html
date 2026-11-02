@@ -975,7 +975,7 @@ text-transform: lowercase;
 
       const LEGAL_DEFAULTS = {
         ky: "+996 312 123456\n«Такси» ЖЧК, ИНН 12345678901234",
-        hy: "",
+        hy: "+374 10 123456\nԻրավաբանական անձի անվանումը\nԳործընկերոջ հասցեն",
         ru: "+998 78 123-45-67\nОOО «Такси для души» УНП 123456789",
         uz: "+998 78 123-45-67\n«Ko‘ngil taksisi» MChJ STIR 123456789",
       };
@@ -1014,7 +1014,7 @@ text-transform: lowercase;
           hoursLabel: "Աշխատանքային ժամեր",
           daysLabel: "Աշխատանքային օրեր",
           legalLabel: "Իրավաբանական տվյալներ և կոնտակտներ։ Պարտադիր նշեք գործընկերոջ իրավաբանական անձի անվանումը և հասցեն։",
-          legalPlaceholder: "Իրավաբանական անձի անվանումը\nԳործընկերոջ հասցեն\nՀեռախոսահամար",
+          legalPlaceholder: "+374 10 123456\nԻրավաբանական անձի անվանումը\nԳործընկերոջ հասցեն",
           brandNameLabel: "Տաքսոպարկի անվանումը, եթե լոգոտիպ չկա",
           brandNamePlaceholder: "Տաքսոպարկի անվանումը",
           logoLabel: "Ձեր վեկտորային լոգոտիպը՝ SVG ձևաչափով",
@@ -1219,10 +1219,11 @@ text-transform: lowercase;
               : LEGAL_DEFAULTS[language];
           if (
             language === "hy" &&
-            document.getElementById("paragraphInput").value ===
-              "+374 10 123456\n«Տաքսի» ՍՊԸ, ՀՎՀՀ 12345678"
+            ["", "+374 10 123456\n«Տաքսի» ՍՊԸ, ՀՎՀՀ 12345678"].includes(
+              document.getElementById("paragraphInput").value,
+            )
           ) {
-            document.getElementById("paragraphInput").value = "";
+            document.getElementById("paragraphInput").value = LEGAL_DEFAULTS.hy;
           }
           document.getElementById("brandNameInput").value =
             state.brandName || "";
@@ -1748,7 +1749,10 @@ text-transform: lowercase;
             dictionary.subheadingOptions[previousSubheadingIndex][0];
         }
 
-        if (Object.values(LEGAL_DEFAULTS).includes(previousParagraph)) {
+        if (
+          Object.values(LEGAL_DEFAULTS).includes(previousParagraph) ||
+          (language === "hy" && !previousParagraph)
+        ) {
           paragraphInput.value = LEGAL_DEFAULTS[language];
         }
 
